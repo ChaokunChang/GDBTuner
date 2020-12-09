@@ -39,36 +39,6 @@ class DBEnv(object):
         """
         pass
 
-    # def _get_reward(self, performance_metrics):
-    #     """
-    #     Args:
-    #         performance_metrics: list, metrics that evaluates the performance of db, including `tps` and `qps`
-    #     Return:
-    #         reward: float, a scalar reward
-    #     """
-    #     pass
-
-    # def _get_state(self, knobs):
-    #     """Collect the metrics after applying the knobs, including the interal metrics that can be seen as state,
-    #     and the external performance metrics that can be used to calculate rewards.
-    #     Args:
-    #         knobs: dict, the db settings.
-    #     Returns:
-    #         state_metrics: the metrics that can be seen as state of env
-    #         performance_metrics: the metrics that can be used to calculate rewards.
-    #     """
-    #     state_metrics = self._get_db_metrics()
-    #     if self.simulator_handle.type == 'sysbench':
-    #         # calculate the sysbench time automaticly, but I don't know what does it mean ...
-    #         if knobs['innodb_buffer_pool_size'] < 161061273600:
-    #             time_sysbench = 150
-    #         else:
-    #             time_sysbench = int(
-    #                 knobs['innodb_buffer_pool_size']/1024.0/1024.0/1024.0/1.1)
-    #         self.simulator_handle.time = time_sysbench
-    #     performance_metrics = self.simulator_handle.execute()
-    #     return state_metrics, performance_metrics
-
 
 class DBInstance(object):
     def __init__(self, config: dict):
@@ -79,6 +49,22 @@ class DBInstance(object):
         self.database = config['database']
         self.memory = config['memory']
         self.type = None
+        self.db_connection = None
+
+    def connect(self, retry_count, retry_interval):
+        pass
+
+    def connected(self):
+        return self.db_connection is not None
+
+    def disconnect(self):
+        pass
+
+    def get_metrics(self):
+        pass
+
+    def update_configuration(self, config):
+        pass
 
 
 class SimulatorInstance(object):

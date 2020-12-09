@@ -1,4 +1,3 @@
-from ..template import DBEnv, DBInstance, SimulatorInstance
 
 import time
 import os
@@ -6,15 +5,87 @@ import math
 import threading
 import math
 import json
+import MySQLdb
+import xmlrpc
+import http
+
 import numpy as np
 
-import utils
+from .. import utils
+from ..template import DBEnv, DBInstance, SimulatorInstance
+
+
+class TimeoutTransport(xmlrpclib.Transport):
+    timeout = 30.0
+
+    def set_timeout(self, timeout):
+        self.timeout = timeout
+
+    def make_connection(self, host):
+        h = http.client.HTTPConnection(host, timeout=self.timeout)
+        return h
 
 
 class MySQLInstance(DBInstance):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, instance_name="mysql1"):
         DBInstance.__init__(self, config)
         self.type = 'mysql'
+        self.instance_name = instance_name
+
+    def connect(self, retry_count=300, retry_interval=5):
+        self.disconnect()
+        for i in range(retry_count):
+            try:
+                self.db_connection = MySQLdb.connect(
+                    host=self.host,
+                    port=self.port,
+                    user=self.user,
+                    passwd=self.password
+                )
+                return True
+            except MySQLdb.Error as e:
+                print("[FAIL]: ", e)
+                time.sleep(retry_interval)
+        return False
+
+    def disconnect(self):
+        if self.connected():
+            self.db_connection.close()
+        else:
+            print("[WARN]: No connection now, disconnect invalid.")
+
+    def get_metrics(self):
+        if not self.connected():
+            self.connect()
+        cursor = self.db_connection.cursor()
+        cmd = 'SELECT NAME, COUNT from information_schema.INNODB_METRICS where status="enabled" ORDER BY NAME'
+        cursor.execute(cmd)
+        data = cursor.fetchall()
+        return dict(data)
+
+    def update_configuration(self, config):
+        """ Modify the configurations by restarting the mysql through Docker
+        Args:
+            config: dict, configurations
+        """
+        transport = TimeoutTransport()
+        transport.set_timeout(60)
+
+        sp = xmlrpc.client.ServerProxy(
+            f"http://{self.host}:20000", transport=transport)
+        params = []
+        for k, v in config.items():
+            params.append(f"{k}:{v}")
+        params = ','.join(params)
+
+        while True:
+            try:
+                sp.start_mysql(self.instance_name, params)
+            except xmlrpc.client.Fault:
+                time.sleep(5)
+            break
+
+        return True
 
 
 class SysBenchSimulator(SimulatorInstance):
@@ -22,6 +93,7 @@ class SysBenchSimulator(SimulatorInstance):
         SimulatorInstance.__init__(self, workload)
         self.executor_path = executor_path
         self.type = 'sysbench'
+        self.time = None
 
     def execute(self, config):
         # start a simulation process in python, and get the result.
