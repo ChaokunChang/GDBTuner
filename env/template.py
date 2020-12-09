@@ -1,20 +1,21 @@
-class DBEnv(object):
+import gym
 
-    def __init__(self, num_metrics, db_handle=None, simulator_handle=None):
+class DBEnv(gym.Env):
+
+    def __init__(self, config):
         """Initialize the ENV
         Args:
-            db_handle: DBHandle, object holding the db connection (incluing the db type).
-            simulator_handle: SimHandle, object holding the simulator connection, usually a script.
+            config: Configuration for environment
         Returns: None
         """
-        self.db_handle = db_handle
-        self.simulator_handle = simulator_handle
+        self.db_handle = config["db_handle"]
+        self.simulator_handle = config["simulator_handle"]
         self.env_type = None
 
         self.knobs = None
         self.steps = 0
         self.done = False
-        self.num_metrics = num_metrics
+        self.num_metrics = config["num_metrics"]
         self.last_performance_metrics = None
         self.default_performance_metrics = None
         self.best_performance_metrics = None
@@ -22,7 +23,8 @@ class DBEnv(object):
     def reset(self):
         """ Reset the environment, which will be called in each episode.
         Args: None
-        Returns: None
+        Returns:
+            observation: Metrics, the state after taking the action.
         """
         pass
 
@@ -31,11 +33,10 @@ class DBEnv(object):
         Args:
             action: Knob, the action chosen by agent.
         Returns:
+            observation: Metrics, the state after taking the action.
             reward: float, the reward according to current db performance.
-            next_state: Metrics, the state after taking the action.
             done: boolean, whether reaching the end of current episode.
             info: dict, the other information needed by trainer.
-            ...
         """
         pass
 

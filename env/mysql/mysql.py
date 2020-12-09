@@ -11,6 +11,8 @@ import http
 
 import numpy as np
 
+from gym import spaces
+
 from .knobs import MySQLKnobs
 from .. import utils
 from ..template import DBEnv, DBConnector, SimulatorConnector
@@ -176,11 +178,26 @@ class SysBenchSimulator(SimulatorConnector):
 
 class MySQLEnv(DBEnv):
 
-    def __init__(self, num_metrics=63, db_handle=None, simulator_handle=None):
-        DBEnv.__init__(self, num_metrics, db_handle, simulator_handle)
+    def __init__(self, config):
+        DBEnv.__init__(self, config)
         self.env_type = 'mysql-v0'
         self.score = 0.0
         self.knobs = MySQLKnobs()
+
+        self.action_space = spaces.Box(
+            low=0.0,
+            high=1.0,
+            shape=(self.knobs.num_knobs,),
+            dtype=np.float32
+        )
+        # it's hard to know the low and high of state
+        # thus we set it as unbounded
+        self.observation_space = spaces.Box(
+            low=-np.inf,
+            high=np.inf,
+            shape=(self.num_metrics,),
+            dtype=np.float32
+        )
 
     def reset(self):
         self.steps = 0
@@ -208,9 +225,10 @@ class MySQLEnv(DBEnv):
         self.knobs.save(
             metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
 
-        return state, performance_metrics
+        return state
 
     def step(self, action):
+        # apply action to update knobs
         self.knobs.apply_action(action)
 
         # record the time cost of applying the new knobs to db
@@ -219,14 +237,15 @@ class MySQLEnv(DBEnv):
         applying_duration = time.time() - applying_duration
 
         # if we failed to apply the new knob, return inf-empty
-        failed_info = {"score": self.score - 10000000, "performance_metrics": [0, 0, 0],
+        failed_info = {"score": self.score - 1e7, "performance_metrics": [0, 0, 0],
                        "applying_duration": applying_duration}
-        failed_ret = - \
-            10000000.0, np.array([0] * self.num_metric), True, failed_info
+        failed_ret = \
+            np.array([0] * self.num_metrics), -1e7, True, failed_info
         if not succeed:
             return failed_ret
         state_metrics, performance_metrics = self._get_state(self.knobs)
         if performance_metrics is None or state_metrics is None:
+            self.done = True
             return failed_ret
 
         # save the knobs and metrics
@@ -247,7 +266,11 @@ class MySQLEnv(DBEnv):
         else:
             print("[INFO]: Best performance remained.")
 
-        return reward, next_state, done, info
+        # stop episode if accumulated reward is too low
+        if self.score < -50:
+            self.done = True
+
+        return next_state, reward, done, info
 
     def _get_db_metrics(self):
         """Collect db metrics using multiple threads, then aggregate the results.
@@ -275,7 +298,7 @@ class MySQLEnv(DBEnv):
         # time.sleep(5)
 
         # aggregate the metrics collected through multiple threads.
-        db_metrics = np.zeros(self.num_metric)
+        db_metrics = np.zeros(self.num_metrics)
 
         def do(metric_name, metric_values):
             metric_type = utils.get_metric_type(metric_name)
@@ -367,7 +390,7 @@ class MySQLEnv(DBEnv):
         print('$$$$$$$$$$$$$$$$$$$$$$')
 
         if reward > 0:
-            reward = reward*1000000
+            reward = reward * 1e6
 
         return reward
 
