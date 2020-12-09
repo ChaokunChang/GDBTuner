@@ -11,12 +11,12 @@ then
 else
     run_script=${script_path}"oltp_read_write.lua"
 fi
-
+# the user here is root, while i don't know why.
 sysbench ${run_script} \
         --mysql-host=$2 \
 	--mysql-port=$3 \
-	--mysql-user=root \
-	--mysql-password=$4 \
+	--mysql-user=$4 \
+	--mysql-password=$5 \
 	--mysql-db=sbtest \
 	--db-driver=mysql \
         --mysql-storage-engine=innodb \
@@ -27,5 +27,5 @@ sysbench ${run_script} \
 	--table-size=10000000 \
 	--report-interval=5 \
 	--threads=256 \
-	--time=$5 \
-	run >> $6
+	--time=$6 \
+	run >> $7

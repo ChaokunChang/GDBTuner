@@ -61,9 +61,17 @@ class DBInstance(object):
         pass
 
     def get_metrics(self):
+        """ Get the state of db
+        Returns:
+            data: dict, status of db in dict format, which can be seen as metrics.
+        """
         pass
 
     def update_configuration(self, config):
+        """ Modify the configurations by restarting the db through Docker
+        Args:
+            config: dict, configurations
+        """
         pass
 
 
@@ -78,13 +86,13 @@ class SimulatorInstance(object):
         Args:
             config: dict, the configs needed by runing simulator.
         Returns: 
-            metrics: list of float, the performace under current simulating workload. 
+            metrics: list of float, the performace under current simulating workload.
         """
         pass
 
     def load_evaluations(self):
         """Load and parse the last evaluation results from self.output_path
         Returns:
-            metrics: list, the evaluation results.
+            metrics: list of float, the performace under current simulating workload.
         """
         pass

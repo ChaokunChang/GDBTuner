@@ -66,10 +66,6 @@ class MySQLInstance(DBInstance):
         return dict(data)
 
     def update_configuration(self, config):
-        """ Modify the configurations by restarting the mysql through Docker
-        Args:
-            config: dict, configurations
-        """
         # First disconnect the db to avoid error as it will be restarted.
         self.disconnect()
 
@@ -106,11 +102,47 @@ class SysBenchSimulator(SimulatorInstance):
         self.type = 'sysbench'
 
     def execute(self, config):
-        metrics = None
-        cmd_bin = f"bash {os.getenv('GDBT_HOME')}/scripts/run_sysbench.sh "
-        cmd_params = f"{config['workload']} {config['host']} {config['port']} {config['passwd']} {config['time']} {self.output_path}"
-        cmd = cmd_bin + " " + cmd_params
+        sysbench_path = os.getenv('SYSBENCH_HOME')
+        if config['workload'] == "read":
+            lua_path = os.path.join(sysbench_path, "oltp_read_only.lua")
+        elif config['workload'] == "write":
+            lua_path = os.path.join(sysbench_path, "oltp_write_only.lua")
+        else:
+            lua_path = os.path.join(sysbench_path, "oltp_read_write.lua")
+
+        db_conn = config["db"]  # a DBInstance
+        cmd_bin = f"sysbench {lua_path}"
+        cmd_params = f" --mysql-host={db_conn.host} --mysql-port={db_conn.port}"
+        cmd_params += f" --mysql-user={db_conn.user} --mysql-password={db_conn.password}"
+        cmd_params += f" --mysql-db=sbtest --db-driver=mysql"
+        cmd_params += f" --mysql-storage-engine=innodb --range-size=100 --events=0 --rand-type=uniform"
+        cmd_params += f" --tables=200 --table-size=10000000 --report-interval=5 --threads=256"
+        cmd_params += f" --time={config['time']}"
+        cmd_run = f"run >> {self.output_path}"
+        cmd = cmd_bin + " " + cmd_params + " " + cmd_run
         print(f"[INFO]: executing cmd: {cmd}")
+
+        simulation_duration = time.time()
+        os.system(cmd)
+        simulation_duration = time.time() - simulation_duration
+        if simulation_duration < 50:
+            # Too small time cost means that the simulation failed.
+            return None
+        time.sleep(10)  # [TODO] don't know why we need to wait ...
+        return self.load_evaluations()
+
+    def execute_by_bash(self, config):
+        # deprecated function.
+        script_path = os.path.join(
+            os.getenv('GDBT_HOME'), "scripts/run_sysbench.sh")
+        db_conn = config["db"]  # a DBInstance
+
+        cmd_bin = f"bash {script_path} "
+        cmd_params = f"{config['workload']} {db_conn.host} {db_conn.port} {db_conn.user} {db_conn.password} {config['time']}"
+        cmd_run = f"run >> {self.output_path}"
+        cmd = cmd_bin + " " + cmd_params + " " + cmd_run
+        print(f"[INFO]: executing cmd: {cmd}")
+
         simulation_duration = time.time()
         os.system(cmd)
         simulation_duration = time.time() - simulation_duration
@@ -220,7 +252,7 @@ class MySQLEnv(DBEnv):
     def _get_db_metrics(self):
         """Collect db metrics using multiple threads, then aggregate the results.
         Returns: 
-            db_metrics: list, the aggregated metrics
+            db_metrics: np.array, the aggregated metrics. The index is the order of sorted keys.
         """
         metrics = []
         _counter = 0
