@@ -105,9 +105,9 @@ class SysBenchSimulator(SimulatorConnector):
 
     def execute(self, config):
         sysbench_path = os.getenv('SYSBENCH_HOME')
-        if config['workload'] == "read":
+        if self.workload == "read":
             lua_path = os.path.join(sysbench_path, "oltp_read_only.lua")
-        elif config['workload'] == "write":
+        elif self.workload == "write":
             lua_path = os.path.join(sysbench_path, "oltp_write_only.lua")
         else:
             lua_path = os.path.join(sysbench_path, "oltp_read_write.lua")
@@ -140,7 +140,7 @@ class SysBenchSimulator(SimulatorConnector):
         db_conn = config["db"]  # a DBConnector
 
         cmd_bin = f"bash {script_path} "
-        cmd_params = f"{config['workload']} {db_conn.host} {db_conn.port} {db_conn.user} {db_conn.password} {config['time']}"
+        cmd_params = f"{self.workload} {db_conn.host} {db_conn.port} {db_conn.user} {db_conn.password} {config['time']}"
         cmd_run = f"run >> {self.output_path}"
         cmd = cmd_bin + " " + cmd_params + " " + cmd_run
         print(f"[INFO]: executing cmd: {cmd}")
@@ -330,7 +330,7 @@ class MySQLEnv(DBEnv):
         state_metrics = self._get_db_metrics()
 
         # get performance metrics through workload simulator.
-        config = {}  # configs for simulator
+        config = {"db": self.db_handle}  # configs for simulator
         if self.simulator_handle.type == 'sysbench':
             # calculate the sysbench time automaticly, but I don't know what does it mean ...
             if knobs['innodb_buffer_pool_size'] < 161061273600:
@@ -339,6 +339,7 @@ class MySQLEnv(DBEnv):
                 time_sysbench = int(
                     knobs['innodb_buffer_pool_size']/1024.0/1024.0/1024.0/1.1)
             config['time'] = time_sysbench
+
         performance_metrics = self.simulator_handle.execute(config)
         return state_metrics, performance_metrics
 
