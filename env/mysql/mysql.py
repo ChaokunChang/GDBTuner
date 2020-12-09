@@ -314,7 +314,7 @@ class MySQLEnv(DBEnv):
         delta_0_tps = float(
             (performance_metrics[0] - self.default_externam_metrics[0]))/self.default_externam_metrics[0]
         delta_t_tps = float(
-            (~[0] - self.last_performance_metrics[0]))/self.last_performance_metrics[0]
+            (performance_metrics[0] - self.last_performance_metrics[0]))/self.last_performance_metrics[0]
 
         tps_reward = reward_calculation(delta_0_tps, delta_t_tps)
 
