@@ -65,7 +65,7 @@ class MySQLConnector(DBConnector):
         data = cursor.fetchall()
         return dict(data)
 
-    def update_configuration(self, config):
+    def update_configuration(self, knobs):
         # First disconnect the db to avoid error as it will be restarted.
         self.disconnect()
 
@@ -76,16 +76,16 @@ class MySQLConnector(DBConnector):
             f"http://{self.host}:20000", transport=transport)
 
         # prepare params for start_mysql.
-        params = []
-        for name in config.names:
-            params.append(f"{name}:{config[name]}")
-        params = ','.join(params)
+        configs = []
+        for name in knobs.names:
+            configs.append(f"{name}:{knobs[name]}")
+        configs = ','.join(configs)
 
         # restart mysql through proxy.
         retry_count = 0
         while retry_count < 3:  # try 2 more times if failed in the first call.
             try:
-                sp.start_mysql(self.instance_name, params)
+                sp.start_mysql(self.instance_name, configs)
             except xmlrpc.client.Fault:
                 time.sleep(5)
                 retry_count += 1
@@ -132,7 +132,7 @@ class SysBenchSimulator(SimulatorConnector):
         return self.load_evaluations()
 
     def execute_by_bash(self, config):
-        # deprecated function.
+        """deprecated function, use execute() instead."""
         script_path = os.path.join(
             os.getenv('GDBT_HOME'), "scripts/run_sysbench.sh")
         db_conn = config["db"]  # a DBConnector

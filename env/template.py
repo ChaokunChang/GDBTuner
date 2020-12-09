@@ -3,8 +3,8 @@ class DBEnv(object):
     def __init__(self, num_metrics, db_handle=None, simulator_handle=None):
         """Initialize the ENV
         Args:
-            db_handle: DBHandle, object holding the db connection (incluing the db type).
-            simulator_handle: SimHandle, object holding the simulator connection, usually a script.
+            db_handle: DBConnector, object holding the db connection (incluing the db type).
+            simulator_handle: SimulatorConnector, object holding the simulator connection.
         Returns: None
         """
         self.db_handle = db_handle
