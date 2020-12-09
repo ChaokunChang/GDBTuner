@@ -1,1 +1,1 @@
-from .knobs import Knobs
+from .knobs import MySQLKnobs

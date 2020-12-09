@@ -1,4 +1,3 @@
-
 import time
 import os
 import re
@@ -12,6 +11,7 @@ import http
 
 import numpy as np
 
+from .knobs import MySQLKnobs
 from .. import utils
 from ..template import DBEnv, DBConnector, SimulatorConnector
 
@@ -77,8 +77,8 @@ class MySQLConnector(DBConnector):
 
         # prepare params for start_mysql.
         params = []
-        for k, v in config.items():
-            params.append(f"{k}:{v}")
+        for name in config.names:
+            params.append(f"{name}:{config[name]}")
         params = ','.join(params)
 
         # restart mysql through proxy.
@@ -176,22 +176,22 @@ class SysBenchSimulator(SimulatorConnector):
 
 class MySQLEnv(DBEnv):
 
-    def __init__(self, num_metrics=63, db_handle=None, simulator_handle=None, knobs_helper=None):
+    def __init__(self, num_metrics=63, db_handle=None, simulator_handle=None):
         DBEnv.__init__(self, num_metrics, db_handle, simulator_handle)
         self.env_type = 'mysql-v0'
         self.score = 0.0
-        self.knobs_helper = knobs_helper
-        self.default_knobs = self.knob.get_init_knobs()
+        self.knobs = MySQLKnobs()
 
     def reset(self):
         self.steps = 0
         self.score = 0
         self.last_performance_metrics = []
         self.done = False
+        self.knobs = MySQLKnobs()
 
         # apply the default knobs to db
         retry_count = 0
-        while not self._apply_knobs(self.default_knobs) and retry_count < 5:
+        while not self._apply_knobs(self.knobs) and retry_count < 5:
             retry_count += 1
             print(
                 f"[WARN]: appling knobs failed, retrying the {retry_count} times ...")
@@ -201,21 +201,21 @@ class MySQLEnv(DBEnv):
 
         # get db states applying the knobs to db.
         state_metrics, performance_metrics = self._get_state(
-            knobs=self.default_knobs)
+            knobs=self.knobs)
         self.last_performance_metrics = performance_metrics
         self.default_performance_metrics = performance_metrics
         state = state_metrics
-        self.knobs_helper.save(
-            knobs=self.default_knobs, metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
+        self.knobs.save(
+            metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
 
         return state, performance_metrics
 
     def step(self, action):
-        knobs = action
+        self.knobs.apply_action(action)
 
         # record the time cost of applying the new knobs to db
         applying_duration = time.time()
-        succeed = self._apply_knobs(knobs)
+        succeed = self._apply_knobs(self.knobs)
         applying_duration = time.time() - applying_duration
 
         # if we failed to apply the new knob, return inf-empty
@@ -225,13 +225,13 @@ class MySQLEnv(DBEnv):
             10000000.0, np.array([0] * self.num_metric), True, failed_info
         if not succeed:
             return failed_ret
-        state_metrics, performance_metrics = self._get_state(knobs)
+        state_metrics, performance_metrics = self._get_state(self.knobs)
         if performance_metrics is None or state_metrics is None:
             return failed_ret
 
         # save the knobs and metrics
-        self.knobs_helper.save(
-            knobs=knobs, metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
+        self.knobs.save(
+            metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
 
         # get rewards, nxt_state, done, and info for current step.
         reward = self._get_reward(performance_metrics)
@@ -251,7 +251,7 @@ class MySQLEnv(DBEnv):
 
     def _get_db_metrics(self):
         """Collect db metrics using multiple threads, then aggregate the results.
-        Returns: 
+        Returns:
             db_metrics: np.array, the aggregated metrics. The index is the order of sorted keys.
         """
         metrics = []
@@ -297,8 +297,8 @@ class MySQLEnv(DBEnv):
     def _get_state(self, knobs):
         """Collect the metrics after applying the knobs, including the interal metrics that can be seen as state,
         and the external performance metrics that can be used to calculate rewards.
-        Args: 
-            knobs: dict, the db settings.
+        Args:
+            knobs: MySQLKnobs, the db settings.
         Returns:
             state_metrics: the metrics that can be seen as state of env
             performance_metrics: the metrics that can be used to calculate rewards.
@@ -397,7 +397,7 @@ class MySQLEnv(DBEnv):
     def _apply_knobs(self, knobs):
         """ Apply the knobs to the db instance
         Args:
-            knobs: dict, mysql parameters.
+            knobs: MySQLKnobs, mysql parameters.
         Returns:
             succeed: boolean, whether the applying succeed.
         """
@@ -410,10 +410,11 @@ class MySQLEnv(DBEnv):
             return True
         else:
             # if we can not connect to the db anymore.
-            self.db_handle.update_configuration(self.default_knobs)
+            self.knobs = MySQLKnobs()
+            self.db_handle.update_configuration(self.knobs)
             print("[FAIL]: Failed to apply the new knobs to db.")
             log_str = ""
-            for key in knobs.keys():
+            for key in knobs.names:
                 log_str += f" --{key}={knobs[key]}"
             with open(f"{os.getenv('GDBT_HOME', '.')}/failed.log", 'a+') as f:
                 f.write(log_str+'\n')
