@@ -40,7 +40,7 @@ class DBEnv(object):
         pass
 
 
-class DBInstance(object):
+class DBConnector(object):
     def __init__(self, config: dict):
         self.host = config['host']
         self.port = config['port']
@@ -75,7 +75,7 @@ class DBInstance(object):
         pass
 
 
-class SimulatorInstance(object):
+class SimulatorConnector(object):
     def __init__(self, workload="read", output_path=None):
         self.workload = workload
         self.type = None

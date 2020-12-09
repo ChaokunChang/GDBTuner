@@ -13,7 +13,7 @@ import http
 import numpy as np
 
 from .. import utils
-from ..template import DBEnv, DBInstance, SimulatorInstance
+from ..template import DBEnv, DBConnector, SimulatorConnector
 
 
 class TimeoutTransport(xmlrpc.client.Transport):
@@ -27,9 +27,9 @@ class TimeoutTransport(xmlrpc.client.Transport):
         return h
 
 
-class MySQLInstance(DBInstance):
+class MySQLConnector(DBConnector):
     def __init__(self, config: dict, instance_name="mysql1"):
-        DBInstance.__init__(self, config)
+        DBConnector.__init__(self, config)
         self.type = 'mysql'
         self.instance_name = instance_name
 
@@ -95,9 +95,9 @@ class MySQLInstance(DBInstance):
         return True
 
 
-class SysBenchSimulator(SimulatorInstance):
+class SysBenchSimulator(SimulatorConnector):
     def __init__(self, executor_path, output_path, workload="read"):
-        SimulatorInstance.__init__(self, workload, output_path)
+        SimulatorConnector.__init__(self, workload, output_path)
         self.executor_path = executor_path
         self.type = 'sysbench'
 
@@ -110,7 +110,7 @@ class SysBenchSimulator(SimulatorInstance):
         else:
             lua_path = os.path.join(sysbench_path, "oltp_read_write.lua")
 
-        db_conn = config["db"]  # a DBInstance
+        db_conn = config["db"]  # a DBConnector
         cmd_bin = f"sysbench {lua_path}"
         cmd_params = f" --mysql-host={db_conn.host} --mysql-port={db_conn.port}"
         cmd_params += f" --mysql-user={db_conn.user} --mysql-password={db_conn.password}"
@@ -135,7 +135,7 @@ class SysBenchSimulator(SimulatorInstance):
         # deprecated function.
         script_path = os.path.join(
             os.getenv('GDBT_HOME'), "scripts/run_sysbench.sh")
-        db_conn = config["db"]  # a DBInstance
+        db_conn = config["db"]  # a DBConnector
 
         cmd_bin = f"bash {script_path} "
         cmd_params = f"{config['workload']} {db_conn.host} {db_conn.port} {db_conn.user} {db_conn.password} {config['time']}"

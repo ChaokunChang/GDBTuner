@@ -1,2 +1,2 @@
-from .template import DBEnv, DBInstance, SimulatorInstance
+from .template import DBEnv, DBConnector, SimulatorConnector
 from . import utils
