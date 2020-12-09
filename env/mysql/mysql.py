@@ -1,6 +1,7 @@
 
 import time
 import os
+import re
 import math
 import threading
 import math
@@ -15,7 +16,7 @@ from .. import utils
 from ..template import DBEnv, DBInstance, SimulatorInstance
 
 
-class TimeoutTransport(xmlrpclib.Transport):
+class TimeoutTransport(xmlrpc.client.Transport):
     timeout = 30.0
 
     def set_timeout(self, timeout):
@@ -42,10 +43,11 @@ class MySQLInstance(DBInstance):
                     user=self.user,
                     passwd=self.password
                 )
-                return True
             except MySQLdb.Error as e:
                 print("[FAIL]: ", e)
                 time.sleep(retry_interval)
+            else:
+                return True
         return False
 
     def disconnect(self):
@@ -68,36 +70,76 @@ class MySQLInstance(DBInstance):
         Args:
             config: dict, configurations
         """
+        # First disconnect the db to avoid error as it will be restarted.
+        self.disconnect()
+
+        # establish rpc proxy to db server.
         transport = TimeoutTransport()
         transport.set_timeout(60)
-
         sp = xmlrpc.client.ServerProxy(
             f"http://{self.host}:20000", transport=transport)
+
+        # prepare params for start_mysql.
         params = []
         for k, v in config.items():
             params.append(f"{k}:{v}")
         params = ','.join(params)
 
-        while True:
+        # restart mysql through proxy.
+        retry_count = 0
+        while retry_count < 3:  # try 2 more times if failed in the first call.
             try:
                 sp.start_mysql(self.instance_name, params)
             except xmlrpc.client.Fault:
                 time.sleep(5)
-            break
+                retry_count += 1
+            else:
+                break
 
         return True
 
 
 class SysBenchSimulator(SimulatorInstance):
-    def __init__(self, executor_path, workload="read"):
-        SimulatorInstance.__init__(self, workload)
+    def __init__(self, executor_path, output_path, workload="read"):
+        SimulatorInstance.__init__(self, workload, output_path)
         self.executor_path = executor_path
         self.type = 'sysbench'
-        self.time = None
 
     def execute(self, config):
-        # start a simulation process in python, and get the result.
-        pass
+        metrics = None
+        cmd_bin = f"bash {os.getenv('GDBT_HOME')}/scripts/run_sysbench.sh "
+        cmd_params = f"{config['workload']} {config['host']} {config['port']} {config['passwd']} {config['time']} {self.output_path}"
+        cmd = cmd_bin + " " + cmd_params
+        print(f"[INFO]: executing cmd: {cmd}")
+        simulation_duration = time.time()
+        os.system(cmd)
+        simulation_duration = time.time() - simulation_duration
+        if simulation_duration < 50:
+            # Too small time cost means that the simulation failed.
+            return None
+        time.sleep(10)  # [TODO] don't know why we need to wait ...
+        return self.load_evaluations()
+
+    def load_evaluations(self):
+        with open(self.output_path) as f:
+            lines = f.read()
+        temporal_pattern = re.compile(
+            "tps: (\d+.\d+) qps: (\d+.\d+) \(r/w/o: (\d+.\d+)/(\d+.\d+)/(\d+.\d+)\)"
+            " lat \(ms,95%\): (\d+.\d+) err/s: (\d+.\d+) reconn/s: (\d+.\d+)")
+        temporal = temporal_pattern.findall(lines)
+        tps = 0
+        latency = 0
+        qps = 0
+
+        for i in temporal[-10:]:
+            tps += float(i[0])
+            latency += float(i[5])
+            qps += float(i[1])
+        num_samples = len(temporal[-10:])
+        tps /= num_samples
+        qps /= num_samples
+        latency /= num_samples
+        return [tps, latency, qps]
 
 
 class MySQLEnv(DBEnv):
@@ -132,7 +174,7 @@ class MySQLEnv(DBEnv):
         self.default_performance_metrics = performance_metrics
         state = state_metrics
         self.knobs_helper.save(
-            knobs=self.default_knobs, metrics=performance_metrics, knob_file="./knob_metrics.txt")
+            knobs=self.default_knobs, metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
 
         return state, performance_metrics
 
@@ -157,7 +199,7 @@ class MySQLEnv(DBEnv):
 
         # save the knobs and metrics
         self.knobs_helper.save(
-            knobs=knobs, metrics=performance_metrics, knob_file="./knob_metrics.txt")
+            knobs=knobs, metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
 
         # get rewards, nxt_state, done, and info for current step.
         reward = self._get_reward(performance_metrics)
@@ -168,10 +210,10 @@ class MySQLEnv(DBEnv):
 
         # update the best performance records, which will be used by reward calculation
         if self._update_best_performance(performance_metrics):
-            print("[INF]: Best performance updated!")
+            print("[INFO]: Best performance updated!")
             self.last_performance_metrics = self.best_performance_metrics
         else:
-            print("[INF]: Best performance remained.")
+            print("[INFO]: Best performance remained.")
 
         return reward, next_state, done, info
 
@@ -229,7 +271,11 @@ class MySQLEnv(DBEnv):
             state_metrics: the metrics that can be seen as state of env
             performance_metrics: the metrics that can be used to calculate rewards.
         """
+        # get state metrics from db
         state_metrics = self._get_db_metrics()
+
+        # get performance metrics through workload simulator.
+        config = {}  # configs for simulator
         if self.simulator_handle.type == 'sysbench':
             # calculate the sysbench time automaticly, but I don't know what does it mean ...
             if knobs['innodb_buffer_pool_size'] < 161061273600:
@@ -237,8 +283,8 @@ class MySQLEnv(DBEnv):
             else:
                 time_sysbench = int(
                     knobs['innodb_buffer_pool_size']/1024.0/1024.0/1024.0/1.1)
-            self.simulator_handle.time = time_sysbench
-        performance_metrics = self.simulator_handle.execute()
+            config['time'] = time_sysbench
+        performance_metrics = self.simulator_handle.execute(config)
         return state_metrics, performance_metrics
 
     def _get_reward(self, performance_metrics):
@@ -311,7 +357,7 @@ class MySQLEnv(DBEnv):
             if cur_rate > best_rate:
                 updated = True
                 self.best_performance_metrics = metrics
-                with open("bestnow.log", "w") as f:
+                with open(f"{os.getenv('GDBT_HOME', '.')}/bestnow.log", "w") as f:
                     f.write(str(cur_tps) + ',' +
                             str(cur_lat) + ',' + str(cur_rate))
         return updated
@@ -337,6 +383,6 @@ class MySQLEnv(DBEnv):
             log_str = ""
             for key in knobs.keys():
                 log_str += f" --{key}={knobs[key]}"
-            with open("failed.log", 'a+') as f:
+            with open(f"{os.getenv('GDBT_HOME', '.')}/failed.log", 'a+') as f:
                 f.write(log_str+'\n')
                 return False

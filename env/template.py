@@ -68,10 +68,23 @@ class DBInstance(object):
 
 
 class SimulatorInstance(object):
-    def __init__(self, workload="read"):
+    def __init__(self, workload="read", output_path=None):
         self.workload = workload
         self.type = None
+        self.output_path = output_path
 
     def execute(self, config):
-        # start a simulation process in python, and get the result.
+        """Start a simulation process in python, and get the result.
+        Args:
+            config: dict, the configs needed by runing simulator.
+        Returns: 
+            metrics: list of float, the performace under current simulating workload. 
+        """
+        pass
+
+    def load_evaluations(self):
+        """Load and parse the last evaluation results from self.output_path
+        Returns:
+            metrics: list, the evaluation results.
+        """
         pass
