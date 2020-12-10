@@ -28,8 +28,6 @@ if __name__ == "__main__":
     args = parse_args()
 
     ray.init()
-    logging.info("ray init finished.")
-    print("ray init finished.")
     # connect to mysql
     mysql_config = {
         "host": "127.0.0.1",
@@ -40,7 +38,6 @@ if __name__ == "__main__":
         "memory": 8 * 1024
     }
     mysql_handle = MySQLConnector(mysql_config)
-    mysql_handle.connect()
     logging.info("mysql connector created.")
 
     # prepare sysbench
