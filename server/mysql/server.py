@@ -4,14 +4,14 @@ import pexpect
 import platform
 import argparse
 import configparser as CP
-import xmlrpc.server as RPCServer
+from xmlrpc.server import SimpleXMLRPCServer
 
 
 class DBServer(object):
     docker = False
 
-    def __init__(self, address, port):
-        self.address = address
+    def __init__(self, ip, port):
+        self.ip = ip
         self.port = port
         self.services = []  # list of functions.
 
@@ -51,11 +51,11 @@ class DBServer(object):
 
 
 class MySQLServer(DBServer):
-    def __init__(self, address="0.0.0.0", port=20000):
-        DBServer.__init__(self, address, port)
+    def __init__(self, ip="0.0.0.0", port=20000):
+        DBServer.__init__(self, ip, port)
 
     def serve(self):
-        server = RPCServer((self.address, self.port))
+        server = SimpleXMLRPCServer((self.ip, self.port))
         server.register_function(MySQLServer.start_db)
         server.register_function(MySQLServer.get_status)
         server.serve_forever()
