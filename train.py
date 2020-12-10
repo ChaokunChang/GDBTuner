@@ -1,4 +1,6 @@
 import argparse
+import os
+import sys
 import gym
 import ray
 from ray import tune
@@ -20,6 +22,8 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    print("HOME: ", os.getenv("GDBT_HOME"))
+    print("WORKLOAD_SRC: ", os.getenv("WORKLOAD_SRC"))
     args = parse_args()
 
     ray.init()
