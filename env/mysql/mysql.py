@@ -413,13 +413,14 @@ class MySQLEnv(DBEnv):
             updated: boolean, whether the best performance has changed.
         """
         updated = False
-        best_tps = self.best_performance_metrics[0]
-        best_lat = self.best_performance_metrics[0]
         cur_tps = metrics[0]
         cur_lat = metrics[1]
         if int(cur_lat) != 0:
             cur_rate = float(cur_tps) / cur_lat
-            best_rate = float(best_tps) / best_lat
+            if self.default_performance_metrics is None:
+                best_rate = -math.inf
+            else:
+                best_rate = float(self.best_performance_metrics[0]) / self.best_performance_metrics[0]
             if cur_rate > best_rate:
                 updated = True
                 self.best_performance_metrics = metrics
