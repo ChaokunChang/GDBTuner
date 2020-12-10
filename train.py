@@ -47,7 +47,7 @@ if __name__ == "__main__":
     config = {
         "env": MySQLEnv,  # "CarRacing-v0",
         "env_config": {
-            "num_metrics": 63,
+            "num_metrics": 74,
             "db_handle": mysql_handle,
             "simulator_handle": sysbench_handle,
         },
