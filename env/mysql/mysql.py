@@ -311,7 +311,7 @@ class MySQLEnv(DBEnv):
             else:
                 return float(sum(metric_values))/len(metric_values)
         print("[DEBUG]: metrics", metrics)
-        keys = metrics[0].keys()
+        keys = list(metrics[0].keys())
         keys.sort()
 
         for idx in range(len(keys)):
