@@ -7,7 +7,7 @@ import math
 import json
 import MySQLdb
 import http
-from xmlrpc.client import ServerProxy,Transport,HTTPConnection
+from xmlrpc.client import ServerProxy,Transport
 
 import numpy as np
 
