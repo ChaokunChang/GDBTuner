@@ -62,6 +62,8 @@ class MySQLServer(DBServer):
 
     @staticmethod
     def start_db(db_name, db_conf):
+        print("[INFO] Start db service. ")
+
         def write_cnf_file(configs):
             """Write the configs to my.cnf file.
             Args:
@@ -82,6 +84,7 @@ class MySQLServer(DBServer):
 
             # write back
             config_parser.write(open(cnf_file, 'w'))
+            print("[INFO] new conf written. ")
 
             # restore the permission of my.cnf.
             DBServer.sudo_exec(f'sudo chmod 744 {cnf_file}', '123456')
