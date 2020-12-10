@@ -134,10 +134,11 @@ class SysBenchSimulator(SimulatorConnector):
         simulation_duration = time.time()
         os.system(cmd)
         simulation_duration = time.time() - simulation_duration
-        if simulation_duration < 5:
+        if simulation_duration < 10:
             # Too small time cost means that the simulation failed.
+            print(f"[WARN] You shouldn't finish simulation in {simulation_duration} seconds.")
             return None
-        time.sleep(10)  # [TODO] don't know why we need to wait ...
+        time.sleep(5)  # [TODO] don't know why we need to wait ...
         return self.load_evaluations()
 
     def execute_by_bash(self, config):
@@ -252,9 +253,11 @@ class MySQLEnv(DBEnv):
         failed_ret = \
             np.array([0] * self.num_metrics), -1e7, True, failed_info
         if not succeed:
+            print("[WARN]: apply_knobs not succedd, return failed_ret")
             return failed_ret
         state_metrics, performance_metrics = self._get_state(self.knobs)
         if performance_metrics is None or state_metrics is None:
+            print("[WARN]: _get_state return None, return failed_ret")
             self.done = True
             return failed_ret
 
@@ -397,6 +400,7 @@ class MySQLEnv(DBEnv):
 
         print(f"[INFO]: Reward: {reward} =  \
             0.4 * {tps_reward} + 0.6 * {lat_reward}")
+        print(f"[INFO]: Score = {self.score}")
 
         if reward > 0:
             reward = reward * 1e6
