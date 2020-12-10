@@ -3,7 +3,7 @@ import time
 import pexpect
 import platform
 import argparse
-import ConfigParser as CP
+import configparser as CP
 import xmlrpc.server as RPCServer
 
 
