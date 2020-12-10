@@ -69,10 +69,10 @@ class MySQLServer(DBServer):
             Args:
                 configs: str, Formatted MySQL Parameters, e.g. "--binlog_size=xxx"
             """
-            cnf_file = '/etc/mysql/my.cnf'
+            cnf_file = '/etc/my.cnf'
 
             # relax the permission of my.cnf
-            DBServer.sudo_exec(f'sudo chmod 777 {cnf_file}', '123456')
+            DBServer.sudo_exec(f'sudo chmod 777 {cnf_file}', 'ckchang_123')
             time.sleep(2)
 
             # use ConfigParser to handle cnf file
@@ -87,7 +87,7 @@ class MySQLServer(DBServer):
             print("[INFO] new conf written. ")
 
             # restore the permission of my.cnf.
-            DBServer.sudo_exec(f'sudo chmod 744 {cnf_file}', '123456')
+            DBServer.sudo_exec(f'sudo chmod 744 {cnf_file}', 'ckchang_123')
             time.sleep(2)
 
         db_conf = db_conf.split(',')
@@ -99,20 +99,20 @@ class MySQLServer(DBServer):
                 docker_params += f" --{key}={value}"
 
             # remove the current docker container.
-            DBServer.sudo_exec(f"sudo docker stop {db_name}", '123456')
-            DBServer.sudo_exec(f"sudo docker rm {db_name}", '123456')
+            DBServer.sudo_exec(f"sudo docker stop {db_name}", 'ckchang_123')
+            DBServer.sudo_exec(f"sudo docker rm {db_name}", 'ckchang_123')
             time.sleep(2)
 
             # start a new mysql container, which will launch a mysql instance.
             cmd = f"sudo docker run --name mysql1 -e MYSQL_ROOT_PASSWORD=12345678 -d -p 0.0.0.0:3365:3306 "
             cmd += f" -v /data/{db_name}/:/var/lib/mysql mysql:5.6 {docker_params}"
             print("[INFO]: Running: ", cmd)
-            DBServer.sudo_exec(cmd, '123456')
+            DBServer.sudo_exec(cmd, 'ckchang_123')
         else:
             write_cnf_file(db_conf)
 
             # restart the database to activate the new configurations.
-            DBServer.sudo_exec('sudo service mysql restart', '123456')
+            DBServer.sudo_exec('sudo service mysql restart', 'ckchang_123')
 
         time.sleep(5)
         return 1
@@ -122,10 +122,10 @@ class MySQLServer(DBServer):
         """Service: get the current mysql status."""
         def check_start():
             a = DBServer.sudo_exec(
-                'sudo tail -1 /var/log/mysql/ubunturmw.err', '123456')
+                'sudo tail -1 /var/log/mysql/ubunturmw.err', 'ckchang_123')
             a = a.strip('\n\r')
             if a.find('pid ended') != -1:
-                DBServer.sudo_exec('sudo service mysql start', '123456')
+                DBServer.sudo_exec('sudo service mysql start', 'ckchang_123')
 
         check_start()
         output = os.popen('service mysql status')

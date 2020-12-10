@@ -49,6 +49,7 @@ class MySQLConnector(DBConnector):
                 print("[FAIL]: ", e)
                 time.sleep(retry_interval)
             else:
+                print("[INFO]: Succeed to connect to db.")
                 return True
         return False
 
@@ -56,8 +57,6 @@ class MySQLConnector(DBConnector):
         if self.connected():
             self.db_connection.close()
             self.db_connection = None
-        else:
-            print("[WARN]: No connection now, disconnect invalid.")
 
     def get_metrics(self):
         if not self.connected():
