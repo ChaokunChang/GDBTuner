@@ -37,7 +37,7 @@ class DBServer(object):
     def sudo_exec(cmdline, passwd):
         osname = platform.system()
         if osname == 'Linux':
-            prompt = r'\[sudo\] password for %s: ' % os.environ['USER']
+            prompt = f"\[sudo\] password for {os.environ['USER']}:"
         elif osname == 'Darwin':
             prompt = 'Password:'
         else:
