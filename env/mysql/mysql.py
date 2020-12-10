@@ -85,17 +85,19 @@ class MySQLConnector(DBConnector):
 
         # restart mysql through proxy.
         retry_count = 0
-        while retry_count < 3:  # try 2 more times if failed in the first call.
+        while retry_count < 5:  # try 4 more times if failed in the first call.
             try:
-                print("[INFO]: start_db")
-                sp.MySQLServer.start_db(self.instance_name, configs)
-            except Fault:
+                print("[INFO]: call start_db through rpc ...")
+                sp.start_db(self.instance_name, configs)
+            except Fault as e:
                 time.sleep(5)
                 retry_count += 1
+                print("[WARN]: rpc call failed, retrying ...", e)
             else:
                 break
-        if retry_count >= 3:
-            print("[ERROR]: rpc call to MySQLServer.start_db failed.")
+        if retry_count >= 5:
+            print("[ERROR]: rpc call to start_db failed.")
+            # raise Exception("[ERROR]: rpc call to MySQLServer failed.")
         return True
 
 
