@@ -132,7 +132,7 @@ class SysBenchSimulator(SimulatorConnector):
         simulation_duration = time.time()
         os.system(cmd)
         simulation_duration = time.time() - simulation_duration
-        if simulation_duration < 50:
+        if simulation_duration < 5:
             # Too small time cost means that the simulation failed.
             return None
         time.sleep(10)  # [TODO] don't know why we need to wait ...
