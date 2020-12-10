@@ -362,7 +362,7 @@ class MySQLEnv(DBEnv):
         """
         print('*****************************')
         print(f"[INFO]: (current,default,last) performance metrics: \n \
-                ({performance_metrics}, {self.default_externam_metrics}, \
+                ({performance_metrics}, {self.default_performance_metrics}, \
                     {self.last_performance_metrics})")
         print('*****************************')
 
@@ -378,7 +378,7 @@ class MySQLEnv(DBEnv):
             return _reward
         # tps
         delta_0_tps = float(
-            (performance_metrics[0] - self.default_externam_metrics[0]))/self.default_externam_metrics[0]
+            (performance_metrics[0] - self.default_performance_metrics[0]))/self.default_performance_metrics[0]
         delta_t_tps = float(
             (performance_metrics[0] - self.last_performance_metrics[0]))/self.last_performance_metrics[0]
 
@@ -386,7 +386,7 @@ class MySQLEnv(DBEnv):
 
         # latency
         delta_0_lat = float(
-            (-performance_metrics[1] + self.default_externam_metrics[1])) / self.default_externam_metrics[1]
+            (-performance_metrics[1] + self.default_performance_metrics[1])) / self.default_performance_metrics[1]
         delta_t_lat = float(
             (-performance_metrics[1] + self.last_performance_metrics[1])) / self.last_performance_metrics[1]
 
