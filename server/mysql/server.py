@@ -115,7 +115,7 @@ class MySQLServer(DBServer):
             write_cnf_file(db_conf)
 
             # restart the database to activate the new configurations.
-            DBServer.sudo_exec('sudo service mysql restart', 'ckchang_123')
+            DBServer.sudo_exec('sudo systemctl restart mysqld', 'ckchang_123')
             print("[INFO]: Restart mysql finished.")
 
         time.sleep(5)
@@ -129,7 +129,7 @@ class MySQLServer(DBServer):
                 'sudo tail -1 /var/log/mysql/ubunturmw.err', 'ckchang_123')
             a = a.strip('\n\r')
             if a.find('pid ended') != -1:
-                DBServer.sudo_exec('sudo /bin/systemctl restart mysqld', 'ckchang_123')
+                DBServer.sudo_exec('sudo systemctl restart mysqld', 'ckchang_123')
 
         check_start()
         output = os.popen('systemctl status mysqld')
