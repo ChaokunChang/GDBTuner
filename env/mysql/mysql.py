@@ -104,7 +104,7 @@ class SysBenchSimulator(SimulatorConnector):
         self.type = 'sysbench'
 
     def execute(self, config):
-        sysbench_path = os.getenv('SYSBENCH_HOME')
+        sysbench_path = os.getenv('WORKLOAD_SRC')
         if self.workload == "read":
             lua_path = os.path.join(sysbench_path, "oltp_read_only.lua")
         elif self.workload == "write":

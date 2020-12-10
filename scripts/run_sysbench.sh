@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-script_path="/usr/local/sysbench1.0.14/share/sysbench/"
+script_path="/usr/share/sysbench/"
 
 if [ "${1}" == "read" ]
 then
