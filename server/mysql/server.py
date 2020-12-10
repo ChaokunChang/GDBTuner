@@ -6,61 +6,6 @@ import argparse
 import configparser as CP
 from xmlrpc.server import SimpleXMLRPCServer
 
-def start_mysql(db_name, db_conf):
-    print("[INFO] Start mysql service. ")
-
-    def write_cnf_file(configs):
-        """Write the configs to my.cnf file.
-        Args:
-            configs: str, Formatted MySQL Parameters, e.g. "--binlog_size=xxx"
-        """
-        cnf_file = '/etc/my.cnf'
-
-        # relax the permission of my.cnf
-        DBServer.sudo_exec(f'sudo chmod 777 {cnf_file}', 'ckchang_123')
-        time.sleep(2)
-
-        # use ConfigParser to handle cnf file
-        config_parser = CP.ConfigParser()
-        config_parser.read(cnf_file)
-        for conf in configs:
-            key, value = conf.split(':')
-            config_parser.set('mysqld', key, value)
-
-        # write back
-        config_parser.write(open(cnf_file, 'w'))
-        print("[INFO] new conf written. ")
-
-        # restore the permission of my.cnf.
-        DBServer.sudo_exec(f'sudo chmod 744 {cnf_file}', 'ckchang_123')
-        time.sleep(2)
-
-    db_conf = db_conf.split(',')
-    if DBServer.docker:
-        # convert the configs to the format "--key=value", then pass them to docker container.
-        docker_params = ''
-        for conf in db_conf:
-            key, value = conf.split(':')
-            docker_params += f" --{key}={value}"
-
-        # remove the current docker container.
-        DBServer.sudo_exec(f"sudo docker stop {db_name}", 'ckchang_123')
-        DBServer.sudo_exec(f"sudo docker rm {db_name}", 'ckchang_123')
-        time.sleep(2)
-
-        # start a new mysql container, which will launch a mysql instance.
-        cmd = f"sudo docker run --name mysql1 -e MYSQL_ROOT_PASSWORD=12345678 -d -p 0.0.0.0:3365:3306 "
-        cmd += f" -v /data/{db_name}/:/var/lib/mysql mysql:5.6 {docker_params}"
-        print("[INFO]: Running: ", cmd)
-        DBServer.sudo_exec(cmd, 'ckchang_123')
-    else:
-        write_cnf_file(db_conf)
-
-        # restart the database to activate the new configurations.
-        DBServer.sudo_exec('sudo service mysql restart', 'ckchang_123')
-
-    time.sleep(5)
-    return 1
 
 class DBServer(object):
     docker = False
@@ -113,12 +58,11 @@ class MySQLServer(DBServer):
         server = SimpleXMLRPCServer((self.ip, self.port))
         server.register_function(MySQLServer.start_db)
         server.register_function(MySQLServer.get_status)
-        server.register_function(start_mysql)
         server.serve_forever()
 
     @staticmethod
     def start_db(db_name, db_conf):
-        print("[INFO] Start db service. ")
+        print("[INFO] Start db service. dname={}, dbconf={}".format(db_name, db_conf))
 
         def write_cnf_file(configs):
             """Write the configs to my.cnf file.
