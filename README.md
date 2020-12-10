@@ -26,6 +26,8 @@ create a new user and database:
 # Login in as root
 CREATE USER 'gdbtuner'@'localhost' IDENTIFIED BY '123456';
 GRANT ALL PRIVILEGES ON * . * TO 'gdbtuner'@'localhost';
+FLUSH PRIVILEGES;
 CREATE database sbtest;
 GRANT ALL PRIVILEGES ON sbtest TO 'gdbtuner'@'localhost';
+FLUSH PRIVILEGES;
 ```
