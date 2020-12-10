@@ -77,7 +77,7 @@ class MySQLConnector(DBConnector):
         sp = ServerProxy(
             f"http://{self.host}:20000", transport=transport)
 
-        # prepare params for start_mysql.
+        # prepare params for start_db.
         configs = []
         for name in knobs.names:
             configs.append(f"{name}:{knobs[name]}")
@@ -87,7 +87,8 @@ class MySQLConnector(DBConnector):
         retry_count = 0
         while retry_count < 3:  # try 2 more times if failed in the first call.
             try:
-                sp.start_mysql(self.instance_name, configs)
+                print("[INFO]: start_db")
+                sp.start_db(self.instance_name, configs)
             except Fault:
                 time.sleep(5)
                 retry_count += 1
