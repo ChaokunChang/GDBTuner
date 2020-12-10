@@ -51,7 +51,7 @@ class DBServer(object):
 
 
 class MySQLServer(DBServer):
-    def __init__(self, ip="0.0.0.0", port=20000):
+    def __init__(self, ip="127.0.0.1", port=20000):
         DBServer.__init__(self, ip, port)
 
     def serve(self):

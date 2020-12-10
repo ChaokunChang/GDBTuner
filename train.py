@@ -40,6 +40,7 @@ if __name__ == "__main__":
         "memory": 8 * 1024
     }
     mysql_handle = MySQLConnector(mysql_config)
+    mysql_handle.connect()
     logging.info("mysql connector created.")
 
     # prepare sysbench

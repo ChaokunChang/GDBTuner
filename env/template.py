@@ -44,7 +44,7 @@ class DBEnv(gym.Env):
 class DBConnector(object):
     def __init__(self, config: dict):
         self.host = config['host']
-        self.port = config['port']
+        self.port = int(config['port'])
         self.user = config['user']
         self.password = config['password']
         self.database = config['database']

@@ -54,7 +54,7 @@ class MySQLKnobs(object):
         return len(self.names)
 
     def __getitem__(self, key):
-        return self.knobs[key]["value"]
+        return self.knobs[key].value
 
     def apply_action(self, action):
         for i, name in enumerate(self.names):

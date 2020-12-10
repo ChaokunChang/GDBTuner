@@ -5,9 +5,9 @@ import math
 import threading
 import math
 import json
-import MySQLdb
+import pymysql
 import http
-from xmlrpc.client import ServerProxy,Transport
+from xmlrpc.client import ServerProxy,Transport,Fault
 
 import numpy as np
 
@@ -39,13 +39,13 @@ class MySQLConnector(DBConnector):
         self.disconnect()
         for i in range(retry_count):
             try:
-                self.db_connection = MySQLdb.connect(
+                self.db_connection = pymysql.connect(
                     host=self.host,
                     port=self.port,
                     user=self.user,
                     passwd=self.password
                 )
-            except MySQLdb.Error as e:
+            except pymysql.Error as e:
                 print("[FAIL]: ", e)
                 time.sleep(retry_interval)
             else:
@@ -88,7 +88,7 @@ class MySQLConnector(DBConnector):
         while retry_count < 3:  # try 2 more times if failed in the first call.
             try:
                 sp.start_mysql(self.instance_name, configs)
-            except xmlrpc.client.Fault:
+            except Fault:
                 time.sleep(5)
                 retry_count += 1
             else:
