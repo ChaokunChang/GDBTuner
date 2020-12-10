@@ -7,7 +7,7 @@ import math
 import json
 import pymysql
 import http
-from xmlrpc.client import ServerProxy,Transport,Fault
+from xmlrpc.client import ServerProxy, Transport, Fault
 
 import numpy as np
 
@@ -88,13 +88,14 @@ class MySQLConnector(DBConnector):
         while retry_count < 3:  # try 2 more times if failed in the first call.
             try:
                 print("[INFO]: start_db")
-                sp.start_db(self.instance_name, configs)
+                sp.MySQLServer.start_db(self.instance_name, configs)
             except Fault:
                 time.sleep(5)
                 retry_count += 1
             else:
                 break
-
+        if retry_count >= 3:
+            print("[ERROR]: rpc call to MySQLServer.start_db failed.")
         return True
 
 
