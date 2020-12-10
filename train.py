@@ -1,7 +1,6 @@
 import argparse
 from math import log
 import os
-import logging
 import gym
 import ray
 from ray import tune
@@ -38,11 +37,9 @@ if __name__ == "__main__":
         "memory": 8 * 1024
     }
     mysql_handle = MySQLConnector(mysql_config)
-    logging.info("mysql connector created.")
 
     # prepare sysbench
     sysbench_handle = SysBenchSimulator()
-    logging.info("sysbench simulator created.")
 
     config = {
         "env": MySQLEnv,  # "CarRacing-v0",
@@ -69,7 +66,5 @@ if __name__ == "__main__":
     print("[INFO]: Finishe training.")
 
     if args.as_test:
-        logging.info("as_test")
         check_learning_achieved(results, args.stop_reward)
     ray.shutdown()
-    logging.info("Ray Shutdown.")
