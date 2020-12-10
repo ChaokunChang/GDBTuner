@@ -177,6 +177,7 @@ class SysBenchSimulator(SimulatorConnector):
         tps /= num_samples
         qps /= num_samples
         latency /= num_samples
+        print(f"[INFO]: performance: tps={tps}, latency={latency}, qps={qps}")
         return [tps, latency, qps]
 
 
