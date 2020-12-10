@@ -422,7 +422,7 @@ class MySQLEnv(DBEnv):
             if self.best_performance_metrics is None:
                 best_rate = -math.inf
             else:
-                best_rate = float(self.best_performance_metrics[0]) / self.best_performance_metrics[0]
+                best_rate = float(self.best_performance_metrics[0]) / self.best_performance_metrics[1]
             if cur_rate > best_rate:
                 updated = True
                 self.best_performance_metrics = metrics
