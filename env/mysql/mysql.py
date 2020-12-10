@@ -310,7 +310,7 @@ class MySQLEnv(DBEnv):
                 return float(metric_values[-1] - metric_values[0])
             else:
                 return float(sum(metric_values))/len(metric_values)
-
+        print("[DEBUG]: metrics", metrics)
         keys = metrics[0].keys()
         keys.sort()
 
