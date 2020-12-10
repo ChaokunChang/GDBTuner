@@ -1,16 +1,18 @@
 import argparse
-import gym, ray
+import gym
+import ray
 from ray import tune
 from ray.rllib.agents import ddpg
 
 from env.mysql import MySQLConnector, SysBenchSimulator, MySQLEnv
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--stop-iters", type=int, default=2)
     parser.add_argument("--stop-timesteps", type=int, default=10000)
     parser.add_argument("--stop-reward", type=float, default=150.0)
-    parser.add_argument("--as-test", action="store_true");
+    parser.add_argument("--as-test", action="store_true")
 
     args = parser.parse_args()
 
@@ -25,24 +27,19 @@ if __name__ == "__main__":
     # connect to mysql
     mysql_config = {
         "host": "127.0.0.1",
-        "port": "1080",
-        "user": "ierg5350",
-        "password": "12345678",
-        "database": "sysbench",
+        "port": "3306",
+        "user": "gdbtuner",
+        "password": "123456",
+        "database": "sbtest",
         "memory": 8 * 1024
     }
     mysql_handle = MySQLConnector(mysql_config)
 
     # prepare sysbench
-    sysbench_config = {
-        executor_path="~/",
-        output_path="~/",
-        workload="read"
-    }
-    sysbench_handle = SysBenchSimulator(*sysbench_config)
+    sysbench_handle = SysBenchSimulator()
 
     config = {
-        "env": MySQLEnv, #"CarRacing-v0",
+        "env": MySQLEnv,  # "CarRacing-v0",
         "env_config": {
             "num_metrics": 63,
             "db_handle": mysql_handle,

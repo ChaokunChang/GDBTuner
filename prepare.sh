@@ -15,7 +15,7 @@ fi
 sysbench ${run_script} \
 	--mysql-host=$2 \
 	--mysql-port=$3 \
-	--mysql-user=cdbtune \
+	--mysql-user=gdbtuner \
 	--mysql-password=$4 \
 	--mysql-db=sbtest \
 	--db-driver=mysql \

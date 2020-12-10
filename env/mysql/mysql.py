@@ -98,7 +98,10 @@ class MySQLConnector(DBConnector):
 
 
 class SysBenchSimulator(SimulatorConnector):
-    def __init__(self, executor_path, output_path, workload="read"):
+    def __init__(self, executor_path="/usr/bin/sysbench",
+                 output_path=os.path.join(
+                     os.getenv("GDBT_HOME"), "data/sysbench/result.log"),
+                 workload="read"):
         SimulatorConnector.__init__(self, workload, output_path)
         self.executor_path = executor_path
         self.type = 'sysbench'
