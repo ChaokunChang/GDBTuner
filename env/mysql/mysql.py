@@ -25,7 +25,7 @@ class TimeoutTransport(Transport):
         self.timeout = timeout
 
     def make_connection(self, host):
-        h = HTTPConnection(host, timeout=self.timeout)
+        h = http.client.HTTPConnection(host, timeout=self.timeout)
         return h
 
 
@@ -74,7 +74,7 @@ class MySQLConnector(DBConnector):
         # establish rpc proxy to db server.
         transport = TimeoutTransport()
         transport.set_timeout(60)
-        sp = xmlrpc.client.ServerProxy(
+        sp = ServerProxy(
             f"http://{self.host}:20000", transport=transport)
 
         # prepare params for start_mysql.
