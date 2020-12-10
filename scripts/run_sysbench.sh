@@ -24,8 +24,8 @@ sysbench ${run_script} \
         --events=0 \
         --rand-type=uniform \
 	--tables=8 \
-	--table-size=1000000 \
+	--table-size=100 \
 	--report-interval=5 \
-	--threads=256 \
+	--threads=128 \
 	--time=$6 \
 	run >> $7

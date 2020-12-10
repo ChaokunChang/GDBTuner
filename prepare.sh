@@ -20,7 +20,7 @@ sysbench ${run_script} \
 	--mysql-db=sbtest \
 	--db-driver=mysql \
 	--tables=8 \
-	--table-size=1000000 \
+	--table-size=100 \
 	--report-interval=10 \
 	--threads=3 \
 	--time=60 \
