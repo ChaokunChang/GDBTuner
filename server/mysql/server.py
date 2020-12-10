@@ -6,17 +6,19 @@ import argparse
 import ConfigParser as CP
 import xmlrpc.server as RPCServer
 
+
 class DBServer(object):
     docker = False
+
     def __init__(self, address, port):
         self.address = address
         self.port = port
-        self.services = [] # list of functions.
-    
+        self.services = []  # list of functions.
+
     def serve(self):
         """Register services and start the server."""
         pass
-    
+
     @staticmethod
     def start_db(db_conn, db_conf):
         """Service: start/restart db.
@@ -25,7 +27,7 @@ class DBServer(object):
             db_conf: str, the serialized configurations for db.
         """
         pass
-    
+
     @staticmethod
     def get_status():
         """Service: get the current db status."""
@@ -47,10 +49,11 @@ class DBServer(object):
             child.expect(pexpect.EOF)
         return child.before
 
+
 class MySQLServer(DBServer):
     def __init__(self, address="0.0.0.0", port=20000):
         DBServer.__init__(self, address, port)
-    
+
     def serve(self):
         server = RPCServer((self.address, self.port))
         server.register_function(MySQLServer.start_db)
@@ -76,7 +79,7 @@ class MySQLServer(DBServer):
             for conf in configs:
                 key, value = conf.split(':')
                 config_parser.set('mysqld', key, value)
-            
+
             # write back
             config_parser.write(open(cnf_file, 'w'))
 
@@ -91,7 +94,7 @@ class MySQLServer(DBServer):
             for conf in db_conf:
                 key, value = conf.split(':')
                 docker_params += f" --{key}={value}"
-            
+
             # remove the current docker container.
             DBServer.sudo_exec(f"sudo docker stop {db_name}", '123456')
             DBServer.sudo_exec(f"sudo docker rm {db_name}", '123456')
@@ -107,19 +110,20 @@ class MySQLServer(DBServer):
 
             # restart the database to activate the new configurations.
             DBServer.sudo_exec('sudo service mysql restart', '123456')
-        
+
         time.sleep(5)
         return 1
-    
+
     @staticmethod
     def get_status():
         """Service: get the current mysql status."""
         def check_start():
-            a = DBServer.sudo_exec('sudo tail -1 /var/log/mysql/ubunturmw.err', '123456')
+            a = DBServer.sudo_exec(
+                'sudo tail -1 /var/log/mysql/ubunturmw.err', '123456')
             a = a.strip('\n\r')
             if a.find('pid ended') != -1:
                 DBServer.sudo_exec('sudo service mysql start', '123456')
-        
+
         check_start()
         output = os.popen('service mysql status')
         status = output.readlines()[2]
@@ -128,3 +132,13 @@ class MySQLServer(DBServer):
             return -1
         return 1
 
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--docker', action='store_true')
+    opt = parser.parse_args()
+    if opt.docker:
+        docker = True
+    dbs = MySQLServer()
+    dbs.serve()
