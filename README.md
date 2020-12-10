@@ -31,3 +31,17 @@ CREATE database sbtest;
 GRANT ALL PRIVILEGES ON sbtest TO 'gdbtuner'@'localhost';
 FLUSH PRIVILEGES;
 ```
+
+## Hyper Parameters
+
+### Sysbench related
+
+workload type: read/write/read_write.
+
+tables=8
+table-size=100
+report-interval=5 # report each 5 seconds.
+threads=16 # for projgw, 128 is the highest.
+time=20 # how long will we run sysbench.
+
+### 
