@@ -1,6 +1,7 @@
 import argparse
+from math import log
 import os
-import sys
+import logging
 import gym
 import ray
 from ray import tune
@@ -22,8 +23,8 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    print("HOME: ", os.getenv("GDBT_HOME"))
-    print("WORKLOAD_SRC: ", os.getenv("WORKLOAD_SRC"))
+    print("[INFO]: GDBT_HOME=", os.getenv("GDBT_HOME"))
+    print("[INFO]: WORKLOAD_SRC=", os.getenv("WORKLOAD_SRC"))
     args = parse_args()
 
     ray.init()
@@ -38,9 +39,11 @@ if __name__ == "__main__":
         "memory": 8 * 1024
     }
     mysql_handle = MySQLConnector(mysql_config)
+    logging.info("mysql connector created.")
 
     # prepare sysbench
     sysbench_handle = SysBenchSimulator()
+    logging.info("sysbench simulator created.")
 
     config = {
         "env": MySQLEnv,  # "CarRacing-v0",
@@ -62,8 +65,12 @@ if __name__ == "__main__":
         "timesteps_total": args.stop_timesteps,
         "episode_reward_mean": args.stop_reward,
     }
+    print("[INFO]: Start training.")
     results = tune.run(ddpg.DDPGTrainer, config=config, stop=stop, verbose=1)
+    print("[INFO]: Finishe training.")
 
     if args.as_test:
+        logging.info("as_test")
         check_learning_achieved(results, args.stop_reward)
     ray.shutdown()
+    logging.info("Ray Shutdown.")

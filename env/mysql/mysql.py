@@ -231,6 +231,7 @@ class MySQLEnv(DBEnv):
         return state
 
     def step(self, action):
+        print("[INFO]: step onece.")
         # apply action to update knobs
         self.knobs.apply_action(action)
 
