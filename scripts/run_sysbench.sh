@@ -23,8 +23,8 @@ sysbench ${run_script} \
         --range-size=100 \
         --events=0 \
         --rand-type=uniform \
-	--tables=200 \
-	--table-size=10000000 \
+	--tables=8 \
+	--table-size=1000000 \
 	--report-interval=5 \
 	--threads=256 \
 	--time=$6 \

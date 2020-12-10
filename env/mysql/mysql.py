@@ -121,7 +121,7 @@ class SysBenchSimulator(SimulatorConnector):
         cmd_params += f" --mysql-user={db_conn.user} --mysql-password={db_conn.password}"
         cmd_params += f" --mysql-db=sbtest --db-driver=mysql"
         cmd_params += f" --mysql-storage-engine=innodb --range-size=100 --events=0 --rand-type=uniform"
-        cmd_params += f" --tables=200 --table-size=10000000 --report-interval=5 --threads=256"
+        cmd_params += f" --tables=8 --table-size=1000000 --report-interval=5 --threads=256"
         cmd_params += f" --time={config['time']}"
         cmd_run = f"run >> {self.output_path}"
         cmd = cmd_bin + " " + cmd_params + " " + cmd_run
