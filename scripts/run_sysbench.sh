@@ -26,6 +26,6 @@ sysbench ${run_script} \
 	--tables=8 \
 	--table-size=100 \
 	--report-interval=5 \
-	--threads=128 \
+	--threads=16 \
 	--time=$6 \
 	run >> $7
