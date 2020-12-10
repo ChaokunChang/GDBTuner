@@ -43,7 +43,7 @@ class DBServer(object):
         else:
             assert False, osname
         child = pexpect.spawn(cmdline)
-        idx = child.expect([prompt, pexpect.EOF], 3)
+        idx = child.expect([prompt, pexpect.EOF], 30)
         if idx == 0:
             print("[INFO]: sudo_exec idx==0")
             child.sendline(passwd)
