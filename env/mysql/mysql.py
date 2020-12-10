@@ -417,7 +417,7 @@ class MySQLEnv(DBEnv):
         cur_lat = metrics[1]
         if int(cur_lat) != 0:
             cur_rate = float(cur_tps) / cur_lat
-            if self.default_performance_metrics is None:
+            if self.best_performance_metrics is None:
                 best_rate = -math.inf
             else:
                 best_rate = float(self.best_performance_metrics[0]) / self.best_performance_metrics[0]
