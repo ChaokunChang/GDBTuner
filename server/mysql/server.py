@@ -69,7 +69,7 @@ class MySQLServer(DBServer):
             Args:
                 configs: str, Formatted MySQL Parameters, e.g. "--binlog_size=xxx"
             """
-            cnf_file = '/etc/my.cnf'
+            cnf_file = '/etc/my.cnf.d/mysql-server.cnf'
 
             # relax the permission of my.cnf
             DBServer.sudo_exec(f'sudo chmod 777 {cnf_file}', 'ckchang_123')
