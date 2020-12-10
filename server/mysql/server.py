@@ -45,8 +45,11 @@ class DBServer(object):
         child = pexpect.spawn(cmdline)
         idx = child.expect([prompt, pexpect.EOF], 3)
         if idx == 0:
+            print("[INFO]: sudo_exec idx==0")
             child.sendline(passwd)
             child.expect(pexpect.EOF)
+        else:
+            print("[INFO]: sudo_exec idx!=0")
         return child.before
 
 
@@ -113,6 +116,7 @@ class MySQLServer(DBServer):
 
             # restart the database to activate the new configurations.
             DBServer.sudo_exec('sudo service mysqld restart', 'ckchang_123')
+            print("[INFO]: Restart mysql finished.")
 
         time.sleep(5)
         return 1
