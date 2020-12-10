@@ -55,6 +55,7 @@ class MySQLConnector(DBConnector):
     def disconnect(self):
         if self.connected():
             self.db_connection.close()
+            self.db_connection = None
         else:
             print("[WARN]: No connection now, disconnect invalid.")
 
@@ -342,7 +343,8 @@ class MySQLEnv(DBEnv):
             else:
                 time_sysbench = int(
                     knobs['innodb_buffer_pool_size']/1024.0/1024.0/1024.0/1.1)
-            config['time'] = time_sysbench
+            # config['time'] = time_sysbench
+            config['time'] = 20
 
         performance_metrics = self.simulator_handle.execute(config)
         return state_metrics, performance_metrics
