@@ -129,10 +129,10 @@ class MySQLServer(DBServer):
                 'sudo tail -1 /var/log/mysql/ubunturmw.err', 'ckchang_123')
             a = a.strip('\n\r')
             if a.find('pid ended') != -1:
-                DBServer.sudo_exec('sudo systemctl restart mysqld', 'ckchang_123')
+                DBServer.sudo_exec('sudo /bin/systemctl restart mysqld', 'ckchang_123')
 
         check_start()
-        output = os.popen('service mysqld status')
+        output = os.popen('systemctl status mysqld')
         status = output.readlines()[2]
         status = status.split(':')[1].replace(' ', '').split('(')[0]
         if status == 'failed':
