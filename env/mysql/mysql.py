@@ -75,7 +75,7 @@ class MySQLConnector(DBConnector):
         transport = TimeoutTransport()
         transport.set_timeout(60)
         sp = ServerProxy(
-            f"http://{self.host}:20000", transport=transport)
+            f"http://0.0.0.0:20000", transport=transport)
 
         # prepare params for start_db.
         configs = []
@@ -287,7 +287,8 @@ class MySQLEnv(DBEnv):
         metrics = []
         _counter = 0
         _period = 5
-        count = 160/5
+        # count = 160/5
+        count = 5
 
         def collect_metric(counter):
             counter += 1
@@ -302,7 +303,7 @@ class MySQLEnv(DBEnv):
                 print("[GET Metrics]Exception:", err)
 
         collect_metric(_counter)
-        # time.sleep(5)
+        time.sleep(5)
 
         # aggregate the metrics collected through multiple threads.
         db_metrics = np.zeros(self.num_metrics)
@@ -313,6 +314,7 @@ class MySQLEnv(DBEnv):
                 return float(metric_values[-1] - metric_values[0])
             else:
                 return float(sum(metric_values))/len(metric_values)
+        
         print("[DEBUG]: metrics", metrics)
         keys = list(metrics[0].keys())
         keys.sort()
