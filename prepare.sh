@@ -19,8 +19,8 @@ sysbench ${run_script} \
 	--mysql-password=$4 \
 	--mysql-db=sbtest \
 	--db-driver=mysql \
-	--tables=200 \
-	--table-size=10000000 \
+	--tables=100 \
+	--table-size=100000 \
 	--report-interval=10 \
 	--threads=16 \
 	--time=5 \
