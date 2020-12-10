@@ -168,6 +168,7 @@ class SysBenchSimulator(SimulatorConnector):
             "tps: (\d+.\d+) qps: (\d+.\d+) \(r/w/o: (\d+.\d+)/(\d+.\d+)/(\d+.\d+)\)"
             " lat \(ms,95%\): (\d+.\d+) err/s: (\d+.\d+) reconn/s: (\d+.\d+)")
         temporal = temporal_pattern.findall(lines)
+        print(f"[INFO]: {len(temporal[-10:])} evaulation samples: ", temporal[-10:])
         tps = 0
         latency = 0
         qps = 0
@@ -317,7 +318,7 @@ class MySQLEnv(DBEnv):
             else:
                 return float(sum(metric_values))/len(metric_values)
         
-        print("[DEBUG]: metrics", metrics)
+        # print("[DEBUG]: metrics", metrics)
         keys = list(metrics[0].keys())
         keys.sort()
 
@@ -349,8 +350,7 @@ class MySQLEnv(DBEnv):
             else:
                 time_sysbench = int(
                     knobs['innodb_buffer_pool_size']/1024.0/1024.0/1024.0/1.1)
-            # config['time'] = time_sysbench
-            config['time'] = 20
+            config['time'] = time_sysbench
 
         performance_metrics = self.simulator_handle.execute(config)
         return state_metrics, performance_metrics
@@ -362,11 +362,9 @@ class MySQLEnv(DBEnv):
         Return:
             reward: float, a scalar reward
         """
-        print('*****************************')
-        print(f"[INFO]: (current,default,last) performance metrics: \n \
+        print(f"[INFO]: (current,default,last) performance metrics: \
                 ({performance_metrics}, {self.default_performance_metrics}, \
                     {self.last_performance_metrics})")
-        print('*****************************')
 
         def reward_calculation(delta0, deltat):
 
@@ -397,10 +395,8 @@ class MySQLEnv(DBEnv):
         reward = tps_reward * 0.4 + 0.6 * lat_reward
         self.score += reward
 
-        print('$$$$$$$$$$$$$$$$$$$$$$')
         print(f"[INFO]: Reward: {reward} =  \
             0.4 * {tps_reward} + 0.6 * {lat_reward}")
-        print('$$$$$$$$$$$$$$$$$$$$$$')
 
         if reward > 0:
             reward = reward * 1e6
