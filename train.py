@@ -28,8 +28,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     ray.init()
-    logging.info("init finished.")
-    print("init finished.")
+    logging.info("ray init finished.")
+    print("ray init finished.")
     # connect to mysql
     mysql_config = {
         "host": "127.0.0.1",
