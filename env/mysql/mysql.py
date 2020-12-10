@@ -6,8 +6,8 @@ import threading
 import math
 import json
 import MySQLdb
-import xmlrpc
 import http
+from xmlrpc.client import ServerProxy,Transport,HTTPConnection
 
 import numpy as np
 
@@ -18,14 +18,14 @@ from .. import utils
 from ..template import DBEnv, DBConnector, SimulatorConnector
 
 
-class TimeoutTransport(xmlrpc.client.Transport):
+class TimeoutTransport(Transport):
     timeout = 30.0
 
     def set_timeout(self, timeout):
         self.timeout = timeout
 
     def make_connection(self, host):
-        h = http.client.HTTPConnection(host, timeout=self.timeout)
+        h = HTTPConnection(host, timeout=self.timeout)
         return h
 
 
