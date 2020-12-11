@@ -139,7 +139,7 @@ class SysBenchSimulator(SimulatorConnector):
             print(
                 f"[WARN] You shouldn't finish simulation in {simulation_duration} seconds.")
             return None
-        time.sleep(5)  # [TODO] don't know why we need to wait ...
+        # time.sleep(5)  # [TODO] don't know why we need to wait ...
         return self.load_evaluations()
 
     def execute_by_bash(self, config):
@@ -295,8 +295,7 @@ class MySQLEnv(DBEnv):
         metrics = []
         _counter = 0
         _period = 5
-        # count = 160/5
-        count = 5
+        count = 160/5
 
         def collect_metric(counter):
             counter += 1
@@ -323,7 +322,7 @@ class MySQLEnv(DBEnv):
             else:
                 return float(sum(metric_values))/len(metric_values)
 
-        # print("[DEBUG]: metrics", metrics)
+        print("[DEBUG]: metrics", metrics)
         keys = list(metrics[0].keys())
         keys.sort()
 
@@ -332,6 +331,7 @@ class MySQLEnv(DBEnv):
             data = [x[key] for x in metrics]
             db_metrics[idx] = do(key, data)
 
+        print("[DEBUG]: db_metrics", db_metrics)
         return db_metrics
 
     def _get_state(self, knobs):
