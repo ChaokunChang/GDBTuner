@@ -129,7 +129,7 @@ class SysBenchSimulator(SimulatorConnector):
         cmd_bin = f"sysbench {lua_path}"
         cmd_params = f" --mysql-host={db_conn.host} --mysql-port={db_conn.port}"
         cmd_params += f" --mysql-user={db_conn.user} --mysql-password={db_conn.password}"
-        cmd_params += f" --mysql-db=sbtest --db-driver=mysql"
+        cmd_params += f" --mysql-db={db_conn.database} --db-driver=mysql"
         cmd_params += f" --mysql-storage-engine=innodb --range-size=100 --events=0 --rand-type=uniform"
         cmd_params += f" --tables={self.tables} --table-size={self.table_size} --threads={self.threads}"
         cmd_params += f" --time={self.running_time} --report-interval={self.report_interval}"
