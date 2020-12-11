@@ -218,7 +218,7 @@ class MySQLEnv(DBEnv):
         )
 
     def reset(self):
-        self.steps = 0
+        self.episode_length = 0
         self.score = 0
         self.last_performance_metrics = []
         self.done = False
@@ -246,7 +246,7 @@ class MySQLEnv(DBEnv):
         return state
 
     def step(self, action):
-        print("[INFO]: step once.")
+        print(f"[INFO]: Running the {self.episode_length}th step of current episode.")
         # apply action to update knobs
         self.knobs.apply_action(action)
 
@@ -288,7 +288,11 @@ class MySQLEnv(DBEnv):
             print("[INFO]: Best performance remained.")
 
         # stop episode if accumulated reward is too low
-        if self.score < -50:
+        if self.score < -10.0: # if the accumulated reward is less than -10, we consider end.
+            print(f"[INFO]: End of episode reached with {self.episode_length} steps, because score = {self.score} < -10.0 .")
+            self.done = True
+        if self.episode_length >= self.max_episode_length:
+            print(f"[INFO]: End of episode reached with {self.episode_length} steps, because max episode length.")
             self.done = True
 
         return next_state, reward, done, info
@@ -463,7 +467,7 @@ class MySQLEnv(DBEnv):
         """
         # apply the knobd to db, which will cause db to restart.
         self.db_handle.update_configuration(knobs)
-        self.steps += 1
+        self.episode_length += 1
 
         if self.db_handle.connect(retry_count=300, retry_interval=5):
             # if we can connect to the db after applying new knobs,

@@ -2,7 +2,7 @@ import gym
 
 class DBEnv(gym.Env):
 
-    def __init__(self, config):
+    def __init__(self, config:dict):
         """Initialize the ENV
         Args:
             config: Configuration for environment
@@ -13,9 +13,10 @@ class DBEnv(gym.Env):
         self.env_type = None
 
         self.knobs = None
-        self.steps = 0
+        self.episode_length = 0
+        self.max_episode_length = config.get("max_episode_length", 50)
         self.done = False
-        self.num_metrics = config["num_metrics"]
+        self.num_metrics = config.get("num_metrics", 74)
         self.last_performance_metrics = None
         self.default_performance_metrics = None
         self.best_performance_metrics = None
