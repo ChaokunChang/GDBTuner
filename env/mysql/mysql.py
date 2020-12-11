@@ -322,7 +322,7 @@ class MySQLEnv(DBEnv):
             else:
                 return float(sum(metric_values))/len(metric_values)
 
-        print("[DEBUG]: metrics", metrics)
+        print(f"[DEBUG]: {len(metrics)}metrics", metrics)
         keys = list(metrics[0].keys())
         keys.sort()
 
@@ -331,7 +331,7 @@ class MySQLEnv(DBEnv):
             data = [x[key] for x in metrics]
             db_metrics[idx] = do(key, data)
 
-        print("[DEBUG]: db_metrics", db_metrics)
+        print(f"[DEBUG]: {len(db_metrics)}db_metrics", db_metrics)
         return db_metrics
 
     def _get_state(self, knobs):
