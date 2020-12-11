@@ -287,7 +287,7 @@ class MySQLEnv(DBEnv):
 
         return next_state, reward, done, info
 
-    def _get_db_metrics(self, db_metrics_holder=[]):
+    def _get_db_metrics(self, db_metrics_holder):
         """Collect db metrics using multiple threads, then aggregate the results.
         Returns:
             db_metrics: np.array, the aggregated metrics. The index is the order of sorted keys.
