@@ -34,7 +34,7 @@ if __name__ == "__main__":
         "user": "gdbtuner",
         "password": "123456",
         "database": "sbtest",
-        "memory": 8 * 1024
+        "memory": 4 * 1024 * 1024 * 1024, # Bytes = 4GB
     }
     mysql_handle = MySQLConnector(mysql_config)
 

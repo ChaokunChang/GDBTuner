@@ -2,43 +2,44 @@ from ..template import Knob
 
 
 class MySQLKnobs(object):
-    def __init__(self):
+    def __init__(self, max_memory_size):
+        # Obtained from MySQL 8.0 documentation
         # TODO: fetch default value from mysql
         self.knobs_attrs = [
             {
                 "name": 'table_open_cache',
-                "range": [1, 10240],
-                "default": 512,
+                "range": [1, 524288],
+                "default": 4000,
                 "type": "int"
             },
             {
                 "name": 'innodb_buffer_pool_size',
-                "range": [1048576, 34359738368],
-                "default": 34359738368,
+                "range": [5242880, max_memory_size], # maximum 2**64-1
+                "default": 134217728, # Bytes = 128MB
                 "type": "int"
             },
             {
                 "name": 'innodb_buffer_pool_instances',
                 "range": [1, 64],
-                "default": 8,
+                "default": 1, # 8 or (1 if innodb_buffer_pool_size < 1GB)
                 "type": "int"
             },
             {
                 "name": 'innodb_purge_threads',
                 "range": [1, 32],
-                "default": 1,
+                "default": 4,
                 "type": "int"
             },
             {
                 "name": 'innodb_read_io_threads',
                 "range": [1, 64],
-                "default": 12,
+                "default": 4,
                 "type": "int"
             },
             {
                 "name": 'innodb_write_io_threads',
                 "range": [1, 64],
-                "default": 12,
+                "default": 4,
                 "type": "int"
             },
         ]
@@ -75,7 +76,9 @@ class MySQLKnobs(object):
 if __name__ == "__main__":
     from pprint import pprint
     import numpy as np
-    mysql_knobs = MySQLKnobs()
+
+    max_memory_size = 4 * 1024 * 1024 * 1024
+    mysql_knobs = MySQLKnobs(max_memory_size)
     print(mysql_knobs.num_knobs)
     print(mysql_knobs)
     pprint(mysql_knobs.knobs)
