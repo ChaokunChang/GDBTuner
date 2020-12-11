@@ -35,6 +35,7 @@ if __name__ == "__main__":
         "password": "123456",
         "database": "sbtest",
         "memory": 4 * 1024 * 1024 * 1024, # Bytes = 4GB
+        "knobs_set": "mini_knobs",
     }
     mysql_handle = MySQLConnector(mysql_config)
 

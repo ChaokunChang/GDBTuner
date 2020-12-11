@@ -63,6 +63,7 @@ class DBConnector(object):
         self.password = config['password']
         self.database = config['database']
         self.memory = config['memory']
+        self.knobs_set = config['knobs_set']
         self.type = None
 
     def connect(self, retry_count, retry_interval):
@@ -123,6 +124,10 @@ class Knob(object):
         if self.knob_type == 'int':
             value = self.min_value + \
                 int((self.max_value - self.min_value) * action)
+        elif self.knob_type == 'float':
+            value = self.min_value + ((self.max_value - self.min_value) * action)
+        elif self.knob_type == 'bool':
+            value = int(x > 0.5)
         else:
             raise NotImplementedError
 
