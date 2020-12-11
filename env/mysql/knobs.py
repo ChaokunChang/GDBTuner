@@ -1,54 +1,75 @@
+import enum
+import json
+
 from ..template import Knob
 
 
 class MySQLKnobs(object):
-    def __init__(self, max_memory_size):
-        # Obtained from MySQL 8.0 documentation
+    def __init__(self, knobs_set, max_memory_size):
         # TODO: fetch default value from mysql
-        self.knobs_attrs = [
-            {
-                "name": 'table_open_cache',
-                "range": [1, 524288],
-                "default": 4000,
-                "type": "int"
-            },
-            {
-                "name": 'innodb_buffer_pool_size',
-                "range": [5242880, max_memory_size], # maximum 2**64-1
-                "default": 134217728, # Bytes = 128MB
-                "type": "int"
-            },
-            {
-                "name": 'innodb_buffer_pool_instances',
-                "range": [1, 64],
-                "default": 1, # 8 or (1 if innodb_buffer_pool_size < 1GB)
-                "type": "int"
-            },
-            {
-                "name": 'innodb_purge_threads',
-                "range": [1, 32],
-                "default": 4,
-                "type": "int"
-            },
-            {
-                "name": 'innodb_read_io_threads',
-                "range": [1, 64],
-                "default": 4,
-                "type": "int"
-            },
-            {
-                "name": 'innodb_write_io_threads',
-                "range": [1, 64],
-                "default": 4,
-                "type": "int"
-            },
-        ]
+        if knobs_set == 'mini_knobs':
+            # Obtained from MySQL 8.0 documentation
+            knobs_path = f'data/mini_knobs.json'
+            with open(knobs_path, 'r') as f:
+                self.knobs_attrs = json.load(knobs_path)
+        elif knobs_set == 'all_knobs':
+            # Fetch from Ottertune
+            knobs_path == f'data/mysql-80_knobs.json'
+            with open(knobs_path, 'r') as f:
+                all_knobs = json.load(knobs_path)
+
+            class VarType(Enum):
+                STRING = 1
+                INTEGER = 2
+                REAL = 3
+                BOOL = 4
+                ENUM = 5
+                TIMESTAMP = 6
+
+            def tunable(knob):
+                attrs = knob['fields']
+                if attrs['tunable'] and \
+                    (attrs['vartype'] == VarType.INTEGER or \
+                     attrs['vartype'] == VarType.REAL or \
+                     attrs['vartype'] == VarType.BOOL):
+                    return True
+
+                return False
+
+            type_map = {
+                'STRING': 'str',
+                'INTEGER': 'int',
+                'REAL': 'float',
+                'BOOL': 'bool',
+                'ENUM': 'enum',
+                'TIMESTAMP': 'timestamp',
+            }
+
+            # remove string and timestamp type knobs
+            self.knobs_attrs = [x for x in all_knobs if tunable(x)]
+            # convert to our format
+            self.knobs_attrs = list(map(
+                lambda x: {
+                    "name": x['fields']['name'].replace('global.', ''),
+                    "range": [x['fields']['minval'], x['fields']['maxval']],
+                    "default": x['fields']['default'],
+                    "type": type_map[VarType(x['fields']['vartype']).name],
+                },
+                self.knobs_attrs
+            ))
+
         self.names = list(map(lambda x: x["name"], self.knobs_attrs))
         self.knobs = dict()
 
         # create dict of knobs for mysql
         for i, name in enumerate(self.names):
             self.knobs[name] = Knob(self.knobs_attrs[i])
+
+        # bound by max_memory_size
+        for name, knob in self.knobs:
+            if knob.knob_type in ['int', 'float'] and \
+                (name.endswith('size') or name.endswith('limit')):
+                knob.max_value = min(knob.max_value, max_memory_size)
 
     @property
     def num_knobs(self):
@@ -78,7 +99,7 @@ if __name__ == "__main__":
     import numpy as np
 
     max_memory_size = 4 * 1024 * 1024 * 1024
-    mysql_knobs = MySQLKnobs(max_memory_size)
+    mysql_knobs = MySQLKnobs('mini_knobs', max_memory_size)
     print(mysql_knobs.num_knobs)
     print(mysql_knobs)
     pprint(mysql_knobs.knobs)
