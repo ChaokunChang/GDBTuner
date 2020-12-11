@@ -105,10 +105,16 @@ class SysBenchSimulator(SimulatorConnector):
     def __init__(self, executor_path="/usr/bin/sysbench",
                  output_path=os.path.join(
                      os.getenv("GDBT_HOME"), "data/sysbench/result.log"),
-                 workload="read"):
+                 workload="read", tables=100, table_size=1e5,
+                 running_time=150, report_interval=5, threads=16):
         SimulatorConnector.__init__(self, workload, output_path)
         self.executor_path = executor_path
         self.type = 'sysbench'
+        self.tables = tables
+        self.table_size = table_size
+        self.running_time = running_time
+        self.report_interval = report_interval
+        self.threads = threads
 
     def execute(self, config):
         sysbench_path = os.getenv('WORKLOAD_SRC')
@@ -125,8 +131,8 @@ class SysBenchSimulator(SimulatorConnector):
         cmd_params += f" --mysql-user={db_conn.user} --mysql-password={db_conn.password}"
         cmd_params += f" --mysql-db=sbtest --db-driver=mysql"
         cmd_params += f" --mysql-storage-engine=innodb --range-size=100 --events=0 --rand-type=uniform"
-        cmd_params += f" --tables=100 --table-size=100000 --report-interval=5 --threads=16"
-        cmd_params += f" --time={config['time']}"
+        cmd_params += f" --tables={self.tables} --table-size={self.table_size} --threads={self.threads}"
+        cmd_params += f" --time={self.running_time} --report-interval={self.report_interval}"
         cmd_run = f"run >> {self.output_path}"
         cmd = cmd_bin + " " + cmd_params + " " + cmd_run
         print(f"[INFO]: executing cmd: {cmd}")
@@ -289,18 +295,23 @@ class MySQLEnv(DBEnv):
 
     def _get_db_metrics(self, db_metrics_holder):
         """Collect db metrics using multiple threads, then aggregate the results.
+        Args:
+            db_metrics_holder: list of dict, a list that hold all the metrics collected from db while sysbench testing.
         Returns:
-            db_metrics: np.array, the aggregated metrics. The index is the order of sorted keys.
+            db_metrics_holder: list of dict, same as input.
         """
-        _counter = 0
-        _period = 5
-        count = 160/5
 
-        def collect_metric(counter):
-            counter += 1
-            timer = threading.Timer(_period, collect_metric, (counter,))
+        # how long the collecting thread will survive.
+        collecting_time = self.simulator_handle.report_interval # default 5
+        # how many threads will be launched to collect metrics.
+        collector_num = self.simulator_handle.running_time/collecting_time + 2 # default 32
+
+        def collect_metric(collector_id):
+            collector_id += 1
+            timer = threading.Timer(
+                collecting_time, collect_metric, (collector_id,))
             timer.start()
-            if counter >= count:
+            if collector_id >= collector_num:
                 timer.cancel()
             try:
                 data = self.db_handle.get_metrics()
@@ -308,12 +319,17 @@ class MySQLEnv(DBEnv):
             except Exception as err:
                 print("[GET Metrics]Exception:", err)
 
-        collect_metric(_counter)
+        collect_metric(0)  # launch the threads to collect metrics.
+
         return db_metrics_holder
 
     def _aggregate_db_metrics(self, db_metrics):
-        # aggregate the db_metrics collected through multiple threads.
-        # return the aggregated metrics as state metrics.
+        """Collect
+        Args:
+            db_metrics, list of dict, the metrics collected from collector threads.
+        Returns:
+            state_metrics, np.array(float), the aggregated metrics as state metrics.
+        """
         state_metrics = np.zeros(self.num_metrics)
 
         def do(metric_name, metric_values):
@@ -346,10 +362,9 @@ class MySQLEnv(DBEnv):
         """
         # get state metrics from db
         db_metrics = []
-        self._get_db_metrics(db_metrics)
 
-        # get performance metrics through workload simulator.
-        config = {"db": self.db_handle}  # configs for simulator
+        # prepare configs for workload simulator.
+        simulator_config = {"db": self.db_handle}  # configs for simulator
         if self.simulator_handle.type == 'sysbench':
             # calculate the sysbench time automaticly, but I don't know what does it mean ...
             if knobs['innodb_buffer_pool_size'] < 161061273600:
@@ -357,9 +372,12 @@ class MySQLEnv(DBEnv):
             else:
                 time_sysbench = int(
                     knobs['innodb_buffer_pool_size']/1024.0/1024.0/1024.0/1.1)
-            config['time'] = time_sysbench
+            self.simulator_handle.running_time = time_sysbench
 
-        performance_metrics = self.simulator_handle.execute(config)
+        # collect db metrics through rpc server, asynchronously collecting. expect to finish with simulator testing.
+        self._get_db_metrics(db_metrics)
+        # get performance metrics through workload simulator.
+        performance_metrics = self.simulator_handle.execute(simulator_config)
         state_metrics = self._aggregate_db_metrics(db_metrics)
         return state_metrics, performance_metrics
 
