@@ -287,12 +287,11 @@ class MySQLEnv(DBEnv):
 
         return next_state, reward, done, info
 
-    def _get_db_metrics(self):
+    def _get_db_metrics(self, db_metrics_holder=[]):
         """Collect db metrics using multiple threads, then aggregate the results.
         Returns:
             db_metrics: np.array, the aggregated metrics. The index is the order of sorted keys.
         """
-        metrics = []
         _counter = 0
         _period = 5
         count = 160/5
@@ -305,15 +304,17 @@ class MySQLEnv(DBEnv):
                 timer.cancel()
             try:
                 data = self.db_handle.get_metrics()
-                metrics.append(data)
+                db_metrics_holder.append(data)
             except Exception as err:
                 print("[GET Metrics]Exception:", err)
 
         collect_metric(_counter)
-        time.sleep(5)
+        return db_metrics_holder
 
-        # aggregate the metrics collected through multiple threads.
-        db_metrics = np.zeros(self.num_metrics)
+    def _aggregate_db_metrics(self, db_metrics):
+        # aggregate the db_metrics collected through multiple threads.
+        # return the aggregated metrics as state metrics.
+        state_metrics = np.zeros(self.num_metrics)
 
         def do(metric_name, metric_values):
             metric_type = utils.get_metric_type(metric_name)
@@ -322,17 +323,17 @@ class MySQLEnv(DBEnv):
             else:
                 return float(sum(metric_values))/len(metric_values)
 
-        print(f"[DEBUG]: {len(metrics)}metrics", metrics)
-        keys = list(metrics[0].keys())
+        print(f"[DEBUG]: {len(db_metrics)}metrics", db_metrics)
+        keys = list(db_metrics[0].keys())
         keys.sort()
 
         for idx in range(len(keys)):
             key = keys[idx]
-            data = [x[key] for x in metrics]
-            db_metrics[idx] = do(key, data)
+            data = [x[key] for x in db_metrics]
+            state_metrics[idx] = do(key, data)
 
-        print(f"[DEBUG]: {len(db_metrics)}db_metrics", db_metrics)
-        return db_metrics
+        print(f"[DEBUG]: {len(state_metrics)}state_metrics", state_metrics)
+        return state_metrics
 
     def _get_state(self, knobs):
         """Collect the metrics after applying the knobs, including the interal metrics that can be seen as state,
@@ -344,7 +345,8 @@ class MySQLEnv(DBEnv):
             performance_metrics: the metrics that can be used to calculate rewards.
         """
         # get state metrics from db
-        state_metrics = self._get_db_metrics()
+        db_metrics = []
+        self._get_db_metrics(db_metrics)
 
         # get performance metrics through workload simulator.
         config = {"db": self.db_handle}  # configs for simulator
@@ -358,6 +360,7 @@ class MySQLEnv(DBEnv):
             config['time'] = time_sysbench
 
         performance_metrics = self.simulator_handle.execute(config)
+        state_metrics = self._aggregate_db_metrics(db_metrics)
         return state_metrics, performance_metrics
 
     def _get_reward(self, performance_metrics):
