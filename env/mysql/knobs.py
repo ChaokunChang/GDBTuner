@@ -61,7 +61,15 @@ class MySQLKnobs(object):
             self.knobs[name].apply_action(action[i])
 
     def save(self, metrics, knob_file):
-        pass
+        knob_strs = []
+        for name in self.knobs.names:
+            knob_strs.append('{}:{}'.format(name, self.knobs[name]))
+        result_str = '{},{},{},'.format(metrics[0], metrics[1], metrics[2])
+        knob_str = "#".join(knob_strs)
+        result_str += knob_str
+
+        with open(knob_file, 'a+') as f:
+            f.write(result_str+'\n')
 
 
 if __name__ == "__main__":
