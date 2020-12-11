@@ -63,7 +63,7 @@ class MySQLKnobs(object):
 
     def save(self, metrics, knob_file):
         knob_strs = []
-        for name in self.knobs.names:
+        for name in self.knobs.keys():
             knob_strs.append('{}:{}'.format(name, self.knobs[name]))
         result_str = '{},{},{},'.format(metrics[0], metrics[1], metrics[2])
         knob_str = "#".join(knob_strs)
