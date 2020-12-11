@@ -199,6 +199,7 @@ class MySQLEnv(DBEnv):
         self.episode_length = 0
         self.score = 0
         self.last_performance_metrics = []
+        self.best_performance_metrics = []
         self.done = False
         self.knobs = MySQLKnobs(self.db_handle.memory)
 
@@ -254,7 +255,6 @@ class MySQLEnv(DBEnv):
         # get rewards, nxt_state, done, and info for current step.
         reward = self._get_reward(performance_metrics)
         next_state = state_metrics
-        done = self.done
         info = {"score": self.score, "performance_metrics": performance_metrics,
                 "applying_duration": applying_duration}
 
@@ -266,14 +266,14 @@ class MySQLEnv(DBEnv):
             print("[INFO]: Best performance remained.")
 
         # stop episode if accumulated reward is too low
-        if self.score < -10.0: # if the accumulated reward is less than -10, we consider end.
+        if self.score < -50.0: # if the accumulated reward is less than -10, we consider end.
             print(f"[INFO]: End of episode reached with {self.episode_length} steps, because score = {self.score} < -10.0 .")
             self.done = True
         if self.episode_length >= self.max_episode_length:
             print(f"[INFO]: End of episode reached with {self.episode_length} steps, because max episode length.")
             self.done = True
 
-        return next_state, reward, done, info
+        return next_state, reward, self.done, info
 
     def _get_db_metrics(self, db_metrics_holder):
         """Collect db metrics using multiple threads, then aggregate the results.
