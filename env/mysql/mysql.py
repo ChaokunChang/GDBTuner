@@ -200,7 +200,7 @@ class MySQLEnv(DBEnv):
         DBEnv.__init__(self, config)
         self.env_type = 'mysql-v0'
         self.score = 0.0
-        self.knobs = MySQLKnobs()
+        self.knobs = MySQLKnobs(self.db_handle.memory)
 
         self.action_space = spaces.Box(
             low=0.0,
@@ -222,7 +222,7 @@ class MySQLEnv(DBEnv):
         self.score = 0
         self.last_performance_metrics = []
         self.done = False
-        self.knobs = MySQLKnobs()
+        self.knobs = MySQLKnobs(self.db_handle.memory)
 
         # apply the default knobs to db
         retry_count = 0
@@ -470,7 +470,7 @@ class MySQLEnv(DBEnv):
             return True
         else:
             # if we can not connect to the db anymore.
-            self.knobs = MySQLKnobs()
+            self.knobs = MySQLKnobs(self.db_handle.memory)
             self.db_handle.update_configuration(self.knobs)
             print("[FAIL]: Failed to apply the new knobs to db.")
             log_str = ""
