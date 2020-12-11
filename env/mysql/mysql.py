@@ -352,7 +352,7 @@ class MySQLEnv(DBEnv):
             data = [x[key] for x in db_metrics]
             state_metrics[idx] = do(key, data)
 
-        print(f"[DEBUG]: {len(state_metrics)}state_metrics", state_metrics)
+        print(f"[DEBUG]: aggreated {len(db_metrics)} metrics and get state_metrics", state_metrics)
         return state_metrics
 
     def _get_state(self, knobs):
