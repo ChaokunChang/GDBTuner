@@ -240,7 +240,7 @@ class MySQLEnv(DBEnv):
         return state
 
     def step(self, action):
-        print("[INFO]: step onece.")
+        print("[INFO]: step once.")
         # apply action to update knobs
         self.knobs.apply_action(action)
 
@@ -323,7 +323,7 @@ class MySQLEnv(DBEnv):
             else:
                 return float(sum(metric_values))/len(metric_values)
 
-        print(f"[DEBUG]: {len(db_metrics)}metrics", db_metrics)
+        # print(f"[DEBUG]: {len(db_metrics)}metrics", db_metrics)
         keys = list(db_metrics[0].keys())
         keys.sort()
 
