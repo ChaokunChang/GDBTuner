@@ -12,7 +12,7 @@ from env.mysql import MySQLConnector, SysBenchSimulator, MySQLEnv
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--stop-iters", type=int, default=2)
-    parser.add_argument("--stop-timesteps", type=int, default=10000)
+    parser.add_argument("--stop-timesteps", type=int, default=400)
     parser.add_argument("--stop-reward", type=float, default=150.0)
     parser.add_argument("--as-test", action="store_true")
 
@@ -51,8 +51,8 @@ if __name__ == "__main__":
         "num_gpus": 0,
         "num_workers": 1,
         "framework": "torch",
-        "learning_starts": 1500,
-        "timesteps_per_iteration": 100,
+        "learning_starts": 5,
+        "timesteps_per_iteration": 20,
         "evaluation_interval": 1,
         "evaluation_num_episodes": 1,
     }
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         "episode_reward_mean": args.stop_reward,
     }
     print("[INFO]: Start training.")
-    results = tune.run(ddpg.DDPGTrainer, config=config, stop=stop, verbose=1)
+    results = tune.run(ddpg.DDPGTrainer, config=config, stop=stop, checkpoint_freq=1, verbose=1)
     print("[INFO]: Finishe training.")
 
     if args.as_test:
