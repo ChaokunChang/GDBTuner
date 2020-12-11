@@ -367,8 +367,8 @@ class MySQLEnv(DBEnv):
         simulator_config = {"db": self.db_handle}  # configs for simulator
         if self.simulator_handle.type == 'sysbench':
             # calculate the sysbench time automaticly, but I don't know what does it mean ...
-            if knobs['innodb_buffer_pool_size'] < 161061273600:
-                time_sysbench = 150
+            if knobs['innodb_buffer_pool_size'] < 75 * 1024 * 1024 * 1024: # 75GB
+                time_sysbench = 75
             else:
                 time_sysbench = int(
                     knobs['innodb_buffer_pool_size']/1024.0/1024.0/1024.0/1.1)
