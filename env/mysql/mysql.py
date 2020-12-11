@@ -136,7 +136,8 @@ class SysBenchSimulator(SimulatorConnector):
         simulation_duration = time.time() - simulation_duration
         if simulation_duration < 10:
             # Too small time cost means that the simulation failed.
-            print(f"[WARN] You shouldn't finish simulation in {simulation_duration} seconds.")
+            print(
+                f"[WARN] You shouldn't finish simulation in {simulation_duration} seconds.")
             return None
         time.sleep(5)  # [TODO] don't know why we need to wait ...
         return self.load_evaluations()
@@ -169,7 +170,8 @@ class SysBenchSimulator(SimulatorConnector):
             "tps: (\d+.\d+) qps: (\d+.\d+) \(r/w/o: (\d+.\d+)/(\d+.\d+)/(\d+.\d+)\)"
             " lat \(ms,95%\): (\d+.\d+) err/s: (\d+.\d+) reconn/s: (\d+.\d+)")
         temporal = temporal_pattern.findall(lines)
-        print(f"[INFO]: {len(temporal[-10:])} evaulation samples: ", temporal[-10:])
+        print(
+            f"[INFO]: {len(temporal[-10:])} evaulation samples: ", temporal[-10:])
         tps = 0
         latency = 0
         qps = 0
@@ -320,7 +322,7 @@ class MySQLEnv(DBEnv):
                 return float(metric_values[-1] - metric_values[0])
             else:
                 return float(sum(metric_values))/len(metric_values)
-        
+
         # print("[DEBUG]: metrics", metrics)
         keys = list(metrics[0].keys())
         keys.sort()
@@ -365,9 +367,8 @@ class MySQLEnv(DBEnv):
         Return:
             reward: float, a scalar reward
         """
-        print(f"[INFO]: (current,default,last) performance metrics: \
-                ({performance_metrics}, {self.default_performance_metrics}, \
-                    {self.last_performance_metrics})")
+        print(
+            f"[INFO]: (current,default,last) performance metrics: ({performance_metrics}, {self.default_performance_metrics}, {self.last_performance_metrics})")
 
         def reward_calculation(delta0, deltat):
 
@@ -398,8 +399,8 @@ class MySQLEnv(DBEnv):
         reward = tps_reward * 0.4 + 0.6 * lat_reward
         self.score += reward
 
-        print(f"[INFO]: Reward: {reward} =  \
-            0.4 * {tps_reward} + 0.6 * {lat_reward}")
+        print(
+            f"[INFO]: Reward: {reward} =  0.4 * {tps_reward} + 0.6 * {lat_reward}")
         print(f"[INFO]: Score = {self.score}")
 
         if reward > 0:
@@ -422,7 +423,8 @@ class MySQLEnv(DBEnv):
             if self.best_performance_metrics is None:
                 best_rate = -math.inf
             else:
-                best_rate = float(self.best_performance_metrics[0]) / self.best_performance_metrics[1]
+                best_rate = float(
+                    self.best_performance_metrics[0]) / self.best_performance_metrics[1]
             if cur_rate > best_rate:
                 updated = True
                 self.best_performance_metrics = metrics
