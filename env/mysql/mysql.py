@@ -145,28 +145,6 @@ class SysBenchSimulator(SimulatorConnector):
             print(
                 f"[WARN] You shouldn't finish simulation in {simulation_duration} seconds.")
             return None
-        # time.sleep(5)  # [TODO] don't know why we need to wait ...
-        return self.load_evaluations()
-
-    def execute_by_bash(self, config):
-        """deprecated function, use execute() instead."""
-        script_path = os.path.join(
-            os.getenv('GDBT_HOME'), "scripts/run_sysbench.sh")
-        db_conn = config["db"]  # a DBConnector
-
-        cmd_bin = f"bash {script_path} "
-        cmd_params = f"{self.workload} {db_conn.host} {db_conn.port} {db_conn.user} {db_conn.password} {config['time']}"
-        cmd_run = f"run >> {self.output_path}"
-        cmd = cmd_bin + " " + cmd_params + " " + cmd_run
-        print(f"[INFO]: executing cmd: {cmd}")
-
-        simulation_duration = time.time()
-        os.system(cmd)
-        simulation_duration = time.time() - simulation_duration
-        if simulation_duration < 50:
-            # Too small time cost means that the simulation failed.
-            return None
-        time.sleep(10)  # [TODO] don't know why we need to wait ...
         return self.load_evaluations()
 
     def load_evaluations(self):
@@ -308,7 +286,7 @@ class MySQLEnv(DBEnv):
         # how long the collecting thread will survive.
         collecting_time = self.simulator_handle.report_interval # default 5
         # how many threads will be launched to collect metrics.
-        collector_num = self.simulator_handle.running_time/collecting_time + 2 # default 32
+        collector_num = self.simulator_handle.running_time/collecting_time + 3 # default 75/5 + 3 = 18
 
         def collect_metric(collector_id):
             collector_id += 1
@@ -321,7 +299,9 @@ class MySQLEnv(DBEnv):
                 data = self.db_handle.get_metrics()
                 db_metrics_holder.append(data)
             except Exception as err:
-                print("[GET Metrics]Exception:", err)
+                print(f"[INFO]: Collector{collector_id}/{collector_num} failed by exception {err}")
+            else:
+                print(f"[INFO]: Collector{collector_id}/{collector_num} finished collecting.")
 
         collect_metric(0)  # launch the threads to collect metrics.
 
