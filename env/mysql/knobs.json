@@ -1,0 +1,99 @@
+[
+    {
+        "name": "table_open_cache",
+        "range": [1, 524288],
+        "default": 4000,
+        "type": "int"
+    },
+    {
+        "name": "innodb_buffer_pool_size",
+        "range": [5242880, max_memory_size],
+        "default": 134217728, 
+        "type": "int"
+    },
+    {
+        "name": "innodb_buffer_pool_instances",
+        "range": [1, 64],
+        "default": 1,
+        "type": "int"
+    },
+    {
+        "name": "innodb_purge_threads",
+        "range": [1, 32],
+        "default": 4,
+        "type": "int"
+    },
+    {
+        "name": "innodb_read_io_threads",
+        "range": [1, 64],
+        "default": 4,
+        "type": "int"
+    },
+    {
+        "name": "innodb_write_io_threads",
+        "range": [1, 64],
+        "default": 4,
+        "type": "int"
+    },
+    {
+        "name": "sort_buffer_size",
+        "range": [32768, max_memory_size],
+        "default": 262144,
+        "type": "int"
+    },
+    {
+        "name": "myisam_sort_buffer_size",
+        "range": [4096, max_memory_size],
+        "default": 8388608,
+        "type": "int"
+    },
+    {
+        "name": "key_buffer_size",
+        "range": [8, OS_PER_PROCESS_LIMIT],
+        "default": 8388608,
+        "type": "int"
+    },
+    {
+        "name": "read_buffer_size",
+        "range": [8192, 2147479552],
+        "default": 131072,
+        "type": "int"
+    },
+    {
+        "name": "max_allowed_packet",
+        "range": [1024, 1073741824],
+        "default": 67108864,
+        "type": "int"
+    },
+    {
+        "name": "thread_cache_size",
+        "range": [8192, 2147479552],
+        "default": 131072,
+        "type": "int"
+    },
+    {
+        "name": "bulk_insert_buffer_size",
+        "range": [0, 2147479552],
+        "default": 8388608,
+        "type": "int"
+    },
+    {
+        "name": "innodb_log_buffer_size",
+        "range": [1048576, 4294967295],
+        "default": 16777216,
+        "type": "int"
+    },
+    {
+        "name": "innodb_max_dirty_pages_pct",
+        "range": [0, 99.9],
+        "default": 90,
+        "type": "float"
+    },
+    {
+        "name": "innodb_io_capacity",
+        "range": [100, 2**64-1 ], 
+        "default": 200,
+        "type": "int"
+    }
+    
+]
