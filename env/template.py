@@ -64,13 +64,9 @@ class DBConnector(object):
         self.database = config['database']
         self.memory = config['memory']
         self.type = None
-        self.db_connection = None
 
     def connect(self, retry_count, retry_interval):
         pass
-
-    def connected(self):
-        return self.db_connection is not None
 
     def disconnect(self):
         pass

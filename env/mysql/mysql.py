@@ -35,41 +35,57 @@ class MySQLConnector(DBConnector):
         self.type = 'mysql'
         self.instance_name = instance_name
 
-    def connect(self, retry_count=300, retry_interval=5):
-        self.disconnect()
+    def get_connection(self, retry_count=0, retry_interval=0):
         for i in range(retry_count):
             try:
-                self.db_connection = pymysql.connect(
+                db_connection = pymysql.connect(
                     host=self.host,
                     port=self.port,
                     user=self.user,
                     passwd=self.password
                 )
             except pymysql.Error as e:
-                print("[FAIL]: ", e)
+                print(f"[FAIL]: Get connection failed in {i+1}th try.", e)
                 time.sleep(retry_interval)
             else:
-                print("[INFO]: Succeed to connect to db.")
+                print(f"[INFO]: Get connection succeed in {i+1}th try.")
+                return db_connection
+        return None
+    
+    def test_connection(self, retry_count=300, retry_interval=5):
+        for i in range(retry_count):
+            try:
+                db_connection = pymysql.connect(
+                    host=self.host,
+                    port=self.port,
+                    user=self.user,
+                    passwd=self.password
+                )
+            except pymysql.Error as e:
+                print(f"[FAIL]: Test connection to db failed in {i+1}.", e)
+                time.sleep(retry_interval)
+            else:
+                print(f"[INFO]: Test connection succeed in {i+1} tines.")
+                db_connection.close()
                 return True
+        print("[INFO]: Test connection failed.")
         return False
 
-    def disconnect(self):
-        if self.connected():
-            self.db_connection.close()
-            self.db_connection = None
 
     def get_metrics(self):
-        if not self.connected():
-            self.connect()
-        cursor = self.db_connection.cursor()
+        db_connection = self.get_connection()
+        if db_connection is None:
+            return None
+        cursor = db_connection.cursor()
         cmd = 'SELECT NAME, COUNT from information_schema.INNODB_METRICS where status="enabled" ORDER BY NAME'
         cursor.execute(cmd)
         data = cursor.fetchall()
+        db_connection.close()
         return dict(data)
 
     def update_configuration(self, knobs):
         # First disconnect the db to avoid error as it will be restarted.
-        self.disconnect()
+        # self.disconnect()
 
         # establish rpc proxy to db server.
         transport = TimeoutTransport()
@@ -303,7 +319,10 @@ class MySQLEnv(DBEnv):
                 timer.cancel()
             try:
                 data = self.db_handle.get_metrics()
-                db_metrics_holder.append(data)
+                if data is None:
+                    print("[INFO]: Collector{collector_id}/{collector_num} failed by no connection.")
+                else:
+                    db_metrics_holder.append(data)
             except Exception as err:
                 print(
                     f"[INFO]: Collector{collector_id}/{collector_num} failed by exception {err}")
@@ -458,7 +477,7 @@ class MySQLEnv(DBEnv):
         self.db_handle.update_configuration(knobs)
         self.episode_length += 1
 
-        if self.db_handle.connect(retry_count=300, retry_interval=5):
+        if self.db_handle.test_connection(retry_count=300, retry_interval=5):
             # if we can connect to the db after applying new knobs,
             return True
         else:
