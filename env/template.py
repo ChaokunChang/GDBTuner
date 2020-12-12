@@ -115,6 +115,8 @@ class Knob(object):
         self.name = config["name"]
         self.value = config["default"]
         self.min_value, self.max_value = config["range"]
+        # for enum type
+        self.enum_values = config.get("enum_values", None)
         self.knob_type = config["type"]
 
     def __repr__(self):
@@ -125,9 +127,20 @@ class Knob(object):
             value = self.min_value + \
                 int((self.max_value - self.min_value) * action)
         elif self.knob_type == 'float':
-            value = self.min_value + ((self.max_value - self.min_value) * action)
+            value = self.min_value + \
+                ((self.max_value - self.min_value) * action)
         elif self.knob_type == 'bool':
-            value = int(x > 0.5)
+            value = int(action > 0.5)
+        elif self.knob_type == 'enum':
+            # map [0-1/n, 1/n-2/n, ..., (n-1)/n-n/n] to [0, 1, ..., n-1]
+            enum_nums = len(self.enum_values)
+            bin_size = 1 / enum_nums
+            # take action as min(action, 1 - bin_size/2)
+            # otherwise value_index is not in the range of
+            #   [0, enum_nums-1]
+            action = min(action, 1 - bin_size/2)
+            value_index = int(action / bin_size)
+            value = self.enum_values[value_index]
         else:
             raise NotImplementedError
 
