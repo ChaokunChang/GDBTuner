@@ -199,7 +199,7 @@ class MySQLEnv(DBEnv):
         self.episode_length = 0
         self.score = 0
         self.last_performance_metrics = []
-        self.best_performance_metrics = []
+        self.best_performance_metrics = None
         self.done = False
         self.knobs = MySQLKnobs(self.db_handle.memory)
 
