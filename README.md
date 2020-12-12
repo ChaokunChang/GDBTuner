@@ -44,4 +44,12 @@ report-interval=5 # report each 5 seconds.
 threads=16 # for projgw, 128 is the highest.
 time=20 # how long will we run sysbench.
 
-### 
+## Ablation study
+
+### Reward Calculation
+
+use best_performance or last_performance?
+
+### Minimal Score
+
+use -10 or -50?
