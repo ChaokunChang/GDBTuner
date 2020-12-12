@@ -220,12 +220,14 @@ class MySQLEnv(DBEnv):
         self.default_performance_metrics = performance_metrics
         state = state_metrics
         self.knobs.save(
-            metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
+            metrics=performance_metrics, knob_file=os.path.join(
+                self.experiment_path, "knob_metrics.txt"))
 
         return state
 
     def step(self, action):
-        print(f"[INFO]: Running the {self.episode_length}th step of current episode.")
+        print(
+            f"[INFO]: Running the {self.episode_length}th step of current episode.")
         # apply action to update knobs
         self.knobs.apply_action(action)
 
@@ -237,8 +239,7 @@ class MySQLEnv(DBEnv):
         # if we failed to apply the new knob, return inf-empty
         failed_info = {"score": self.score - 1e7, "performance_metrics": [0, 0, 0],
                        "applying_duration": applying_duration}
-        failed_ret = \
-            np.array([0] * self.num_metrics), -1e7, True, failed_info
+        failed_ret = np.array([0] * self.num_metrics), -1e7, True, failed_info
         if not succeed:
             print("[WARN]: apply_knobs not succedd, return failed_ret")
             return failed_ret
@@ -250,7 +251,8 @@ class MySQLEnv(DBEnv):
 
         # save the knobs and metrics
         self.knobs.save(
-            metrics=performance_metrics, knob_file=f"{os.getenv('GDBT_HOME', '.')}/knob_metrics.txt")
+            metrics=performance_metrics, knob_file=os.path.join(
+                self.experiment_path, "knob_metrics.txt"))
 
         # get rewards, nxt_state, done, and info for current step.
         reward = self._get_reward(performance_metrics)
@@ -266,11 +268,14 @@ class MySQLEnv(DBEnv):
             print("[INFO]: Best performance remained.")
 
         # stop episode if accumulated reward is too low
-        if self.score < -50.0: # if the accumulated reward is less than -10, we consider end.
-            print(f"[INFO]: End of episode reached with {self.episode_length} steps, because score = {self.score} < -10.0 .")
+        # if the accumulated reward is less than -10, we consider end.
+        if self.score < -50.0:
+            print(
+                f"[INFO]: End of episode reached with {self.episode_length} steps, because score = {self.score} < -10.0 .")
             self.done = True
         if self.episode_length >= self.max_episode_length:
-            print(f"[INFO]: End of episode reached with {self.episode_length} steps, because max episode length.")
+            print(
+                f"[INFO]: End of episode reached with {self.episode_length} steps, because max episode length.")
             self.done = True
 
         return next_state, reward, self.done, info
@@ -284,9 +289,10 @@ class MySQLEnv(DBEnv):
         """
 
         # how long the collecting thread will survive.
-        collecting_time = self.simulator_handle.report_interval # default 5
+        collecting_time = self.simulator_handle.report_interval  # default 5
         # how many threads will be launched to collect metrics.
-        collector_num = self.simulator_handle.running_time/collecting_time + 3 # default 75/5 + 3 = 18
+        collector_num = self.simulator_handle.running_time / \
+            collecting_time + 3  # default 75/5 + 3 = 18
 
         def collect_metric(collector_id):
             collector_id += 1
@@ -299,9 +305,11 @@ class MySQLEnv(DBEnv):
                 data = self.db_handle.get_metrics()
                 db_metrics_holder.append(data)
             except Exception as err:
-                print(f"[INFO]: Collector{collector_id}/{collector_num} failed by exception {err}")
+                print(
+                    f"[INFO]: Collector{collector_id}/{collector_num} failed by exception {err}")
             else:
-                print(f"[INFO]: Collector{collector_id}/{collector_num} finished collecting.")
+                print(
+                    f"[INFO]: Collector{collector_id}/{collector_num} finished collecting.")
 
         collect_metric(0)  # launch the threads to collect metrics.
 
@@ -332,7 +340,8 @@ class MySQLEnv(DBEnv):
             data = [x[key] for x in db_metrics]
             state_metrics[idx] = do(key, data)
 
-        print(f"[DEBUG]: aggreated {len(db_metrics)} metrics and get state_metrics", state_metrics)
+        print(
+            f"[DEBUG]: aggreated {len(db_metrics)} metrics and get state_metrics", state_metrics)
         return state_metrics
 
     def _get_state(self, knobs):
@@ -351,7 +360,7 @@ class MySQLEnv(DBEnv):
         simulator_config = {"db": self.db_handle}  # configs for simulator
         if self.simulator_handle.type == 'sysbench':
             # calculate the sysbench time automaticly, but I don't know what does it mean ...
-            if knobs['innodb_buffer_pool_size'] < 75 * 1024 * 1024 * 1024: # 75GB
+            if knobs['innodb_buffer_pool_size'] < 75 * 1024 * 1024 * 1024:  # 75GB
                 time_sysbench = 75
             else:
                 time_sysbench = int(
@@ -433,9 +442,9 @@ class MySQLEnv(DBEnv):
             if cur_rate > best_rate:
                 updated = True
                 self.best_performance_metrics = metrics
-                with open(f"{os.getenv('GDBT_HOME', '.')}/bestnow.log", "w") as f:
-                    f.write(str(cur_tps) + ',' +
-                            str(cur_lat) + ',' + str(cur_rate))
+                # with open(f"{os.getenv('GDBT_HOME', '.')}/bestnow.log", "w") as f:
+                #     f.write(str(cur_tps) + ',' +
+                #             str(cur_lat) + ',' + str(cur_rate))
         return updated
 
     def _apply_knobs(self, knobs):
@@ -460,6 +469,6 @@ class MySQLEnv(DBEnv):
             log_str = ""
             for key in knobs.names:
                 log_str += f" --{key}={knobs[key]}"
-            with open(f"{os.getenv('GDBT_HOME', '.')}/failed.log", 'a+') as f:
+            with open(os.path.join(self.experiment_path, "failed.log"), 'a+') as f:
                 f.write(log_str+'\n')
                 return False

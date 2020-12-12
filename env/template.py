@@ -1,8 +1,12 @@
 import gym
+import time
+import datetime
+import os
+
 
 class DBEnv(gym.Env):
 
-    def __init__(self, config:dict):
+    def __init__(self, config: dict):
         """Initialize the ENV
         Args:
             config: Configuration for environment
@@ -20,6 +24,11 @@ class DBEnv(gym.Env):
         self.last_performance_metrics = None
         self.default_performance_metrics = None
         self.best_performance_metrics = None
+        self.experiment_id = datetime.datetime.fromtimestamp(
+            int(time.time())).strftime("%Y-%m-%d-%H%M%S")
+        self.gdbt_home = os.getenv("GDBT_HOME")
+        self.experiment_path = os.path.join(
+            self.gdbt_home, f"data/experiments/{self.experiment_id}")
 
     def reset(self):
         """ Reset the environment, which will be called in each episode.
@@ -112,7 +121,8 @@ class Knob(object):
 
     def apply_action(self, action):
         if self.knob_type == 'int':
-            value = self.min_value + int((self.max_value - self.min_value) * action)
+            value = self.min_value + \
+                int((self.max_value - self.min_value) * action)
         else:
             raise NotImplementedError
 
