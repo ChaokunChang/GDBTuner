@@ -112,6 +112,9 @@ if __name__ == "__main__":
     print(mysql_knobs.names)
     pprint(mysql_knobs.knobs)
 
+    assert(mysql_knobs.knobs['innodb_buffer_pool_size'].max_value \
+        == max_memory_size)
+
     # generate random action
     for i in range(10):
         action = np.random.random(mysql_knobs.num_knobs)
