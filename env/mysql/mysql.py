@@ -308,7 +308,7 @@ class MySQLEnv(DBEnv):
         collecting_time = self.simulator_handle.report_interval  # default 5
         # how many threads will be launched to collect metrics.
         collector_num = self.simulator_handle.running_time / \
-            collecting_time + 3  # default 75/5 + 3 = 18
+            collecting_time + 2  # default 75/5 + 2 = 17
 
         def collect_metric(collector_id):
             collector_id += 1
@@ -320,7 +320,7 @@ class MySQLEnv(DBEnv):
             try:
                 data = self.db_handle.get_metrics()
                 if data is None:
-                    print("[INFO]: Collector{collector_id}/{collector_num} failed by no connection.")
+                    print(f"[INFO]: Collector{collector_id}/{collector_num} failed by no connection.")
                 else:
                     db_metrics_holder.append(data)
             except Exception as err:
