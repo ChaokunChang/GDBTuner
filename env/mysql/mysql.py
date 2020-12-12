@@ -284,7 +284,7 @@ class MySQLEnv(DBEnv):
 
         # stop episode if accumulated reward is too low
         # if the accumulated reward is less than -10, we consider end.
-        if self.score < -50.0:
+        if self.score < -10.0:
             print(
                 f"[INFO]: End of episode reached with {self.episode_length} steps, because score = {self.score} < -10.0 .")
             self.done = True
