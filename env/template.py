@@ -29,6 +29,8 @@ class DBEnv(gym.Env):
         self.gdbt_home = os.getenv("GDBT_HOME")
         self.experiment_path = os.path.join(
             self.gdbt_home, f"data/experiments/{self.experiment_id}")
+        if not os.path.exists(self.experiment_path):
+            os.mkdir(self.experiment_path)
 
     def reset(self):
         """ Reset the environment, which will be called in each episode.
