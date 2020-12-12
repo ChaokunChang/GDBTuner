@@ -51,7 +51,7 @@ class MySQLConnector(DBConnector):
                 print(f"[INFO]: Get connection succeed in {i+1}th try.")
                 return db_connection
         return None
-    
+
     def test_connection(self, retry_count=300, retry_interval=5):
         for i in range(retry_count):
             try:
@@ -62,14 +62,14 @@ class MySQLConnector(DBConnector):
                     passwd=self.password
                 )
             except pymysql.Error as e:
-                print(f"[FAIL]: Test connection to db failed in {i+1}th try.", e)
+                print(
+                    f"[FAIL]: Test connection to db failed in {i+1}th try.", e)
                 time.sleep(retry_interval)
             else:
                 print(f"[INFO]: Test connection succeed in {i+1} times try.")
                 db_connection.close()
                 return True
         return False
-
 
     def get_metrics(self):
         db_connection = self.get_connection()
@@ -193,7 +193,8 @@ class MySQLEnv(DBEnv):
         DBEnv.__init__(self, config)
         self.env_type = 'mysql-v0'
         self.score = 0.0
-        self.knobs = MySQLKnobs(self.db_handle.knobs_set, self.db_handle.memory)
+        self.knobs = MySQLKnobs(
+            self.db_handle.knobs_set, self.db_handle.memory)
 
         self.action_space = spaces.Box(
             low=0.0,
@@ -216,7 +217,9 @@ class MySQLEnv(DBEnv):
         self.last_performance_metrics = []
         self.best_performance_metrics = None
         self.done = False
-        self.knobs = MySQLKnobs(self.db_handle.knobs_set, self.db_handle.memory)
+        self.knobs = MySQLKnobs(
+            self.db_handle.knobs_set, self.db_handle.memory)
+        self.progress.append([])
 
         # apply the default knobs to db
         retry_count = 0
@@ -243,13 +246,16 @@ class MySQLEnv(DBEnv):
     def step(self, action):
         print(
             f"[INFO]: Running the {self.episode_length}th step of current episode.")
+        step_log = {"step": self.episode_length}
         # apply action to update knobs
         self.knobs.apply_action(action)
+        step_log["knobs"] = self.knobs.as_dict()
 
         # record the time cost of applying the new knobs to db
         applying_duration = time.time()
         succeed = self._apply_knobs(self.knobs)
         applying_duration = time.time() - applying_duration
+        step_log["applying_duration"] = applying_duration
 
         # if we failed to apply the new knob, return inf-empty
         failed_info = {"score": self.score - 1e7, "performance_metrics": [0, 0, 0],
@@ -257,6 +263,7 @@ class MySQLEnv(DBEnv):
         failed_ret = np.array([0] * self.num_metrics), -1e7, True, failed_info
         if not succeed:
             print("[WARN]: apply_knobs not succedd, return failed_ret")
+            self.done = True
             return failed_ret
         state_metrics, performance_metrics = self._get_state(self.knobs)
         if performance_metrics is None or state_metrics is None:
@@ -264,6 +271,10 @@ class MySQLEnv(DBEnv):
             self.done = True
             return failed_ret
 
+        step_log["next_state"] = state_metrics
+        step_log["tps"] = performance_metrics[0]
+        step_log["lat"] = performance_metrics[1]
+        step_log["qps"] = performance_metrics[2]
         # save the knobs and metrics
         self.knobs.save(
             metrics=performance_metrics, knob_file=os.path.join(
@@ -271,6 +282,9 @@ class MySQLEnv(DBEnv):
 
         # get rewards, nxt_state, done, and info for current step.
         reward = self._get_reward(performance_metrics)
+        step_log["reward"] = reward
+        step_log["score"] = self.score
+
         next_state = state_metrics
         info = {"score": self.score, "performance_metrics": performance_metrics,
                 "applying_duration": applying_duration}
@@ -281,7 +295,10 @@ class MySQLEnv(DBEnv):
             self.last_performance_metrics = self.best_performance_metrics
         else:
             print("[INFO]: Best performance remained.")
+        step_log["best_tps_lat"] = self.last_performance_metrics[0] / \
+            self.last_performance_metrics[1]
 
+        self.progress[-1].append(step_log)
         # stop episode if accumulated reward is too low
         # if the accumulated reward is less than -10, we consider end.
         if self.score < -10.0:
@@ -292,6 +309,16 @@ class MySQLEnv(DBEnv):
             print(
                 f"[INFO]: End of episode reached with {self.episode_length} steps, because max episode length.")
             self.done = True
+
+        if self.done:
+            progress_i_file_path = os.path.join(
+                self.experiment_path, f"progress_{len(self.progress)}.json")
+            with open(progress_i_file_path, 'w') as f:
+                f.write(json.dumps(self.progress[-1]))
+            progress_file_path = os.path.join(
+                self.experiment_path, "progress.json")
+            with open(progress_file_path, 'w') as f:
+                f.write(json.dumps(self.progress))
 
         return next_state, reward, self.done, info
 
@@ -319,7 +346,8 @@ class MySQLEnv(DBEnv):
             try:
                 data = self.db_handle.get_metrics()
                 if data is None:
-                    print(f"[INFO]: Collector{collector_id}/{collector_num} failed by no connection.")
+                    print(
+                        f"[INFO]: Collector{collector_id}/{collector_num} failed by no connection.")
                 else:
                     db_metrics_holder.append(data)
             except Exception as err:
@@ -477,13 +505,14 @@ class MySQLEnv(DBEnv):
         self.episode_length += 1
 
         if self.db_handle.test_connection(retry_count=300, retry_interval=5):
-            # if we can connect to the db after applying new knobs, 
+            # if we can connect to the db after applying new knobs,
             # it means that the db has already been restarted.
             return True
         else:
             # if we can not connect to the db anymore.
             print(print("[FAIL]: The database is not running, check it."))
-            self.knobs = MySQLKnobs(self.db_handle.knobs_set, self.db_handle.memory)
+            self.knobs = MySQLKnobs(
+                self.db_handle.knobs_set, self.db_handle.memory)
             self.db_handle.update_configuration(self.knobs)
             print("[FAIL]: Failed to apply the new knobs to db.")
             log_str = ""

@@ -33,6 +33,7 @@ class DBEnv(gym.Env):
             os.mkdir(self.experiment_path)
         if self.simulator_handle is not None:
             self.simulator_handle.output_path = os.path.join(self.experiment_path,"sysbench_result.log")
+        self.progress = []
 
     def reset(self):
         """ Reset the environment, which will be called in each episode.

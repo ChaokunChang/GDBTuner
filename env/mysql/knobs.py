@@ -1,4 +1,5 @@
-import json,os
+import json
+import os
 from enum import Enum
 
 from ..template import Knob
@@ -10,12 +11,12 @@ class MySQLKnobs(object):
         gdbt_home = os.getenv('GDBT_HOME')
         if knobs_set == 'mini_knobs':
             # Obtained from MySQL 8.0 documentation
-            knobs_path = os.path.join(gdbt_home,'data/mini_knobs.json')
+            knobs_path = os.path.join(gdbt_home, 'data/mini_knobs.json')
             with open(knobs_path, 'r') as f:
                 self.knobs_attrs = json.load(f)
         elif knobs_set == 'all_knobs':
             # Fetch from Ottertune
-            knobs_path = os.path.join(gdbt_home,'data/mysql-80_knobs.json')
+            knobs_path = os.path.join(gdbt_home, 'data/mysql-80_knobs.json')
             with open(knobs_path, 'r') as f:
                 all_knobs = json.load(f)
 
@@ -73,7 +74,7 @@ class MySQLKnobs(object):
             # as name ends with size or limit is not necessary bounded
             # by max_memory_size
             if knob.knob_type in ['int', 'float'] and \
-                (name.endswith('size') or name.endswith('limit')):
+                    (name.endswith('size') or name.endswith('limit')):
                 knob.max_value = min(knob.max_value, max_memory_size)
                 knob.value = min(knob.value, knob.max_value)
 
@@ -99,6 +100,12 @@ class MySQLKnobs(object):
         with open(knob_file, 'a+') as f:
             f.write(result_str+'\n')
 
+    def as_dict(self):
+        ret = {}
+        for name in self.knobs.keys():
+            ret[name] = self.knobs[name]
+        return ret
+
 
 if __name__ == "__main__":
     from pprint import pprint
@@ -112,8 +119,8 @@ if __name__ == "__main__":
     print(mysql_knobs.names)
     pprint(mysql_knobs.knobs)
 
-    assert(mysql_knobs.knobs['innodb_buffer_pool_size'].max_value \
-        == max_memory_size)
+    assert(mysql_knobs.knobs['innodb_buffer_pool_size'].max_value
+           == max_memory_size)
 
     # generate random action
     for i in range(10):
