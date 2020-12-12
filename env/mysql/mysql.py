@@ -35,7 +35,7 @@ class MySQLConnector(DBConnector):
         self.type = 'mysql'
         self.instance_name = instance_name
 
-    def get_connection(self, retry_count=0, retry_interval=0):
+    def get_connection(self, retry_count=1, retry_interval=0):
         for i in range(retry_count):
             try:
                 db_connection = pymysql.connect(
