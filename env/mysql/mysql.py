@@ -308,7 +308,7 @@ class MySQLEnv(DBEnv):
         collecting_time = self.simulator_handle.report_interval  # default 5
         # how many threads will be launched to collect metrics.
         collector_num = self.simulator_handle.running_time / \
-            collecting_time + 2  # default 75/5 + 2 = 17
+            collecting_time + 1  # default 75/5 + 1= 16
 
         def collect_metric(collector_id):
             collector_id += 1
