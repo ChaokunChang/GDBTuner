@@ -50,6 +50,10 @@ time=20 # how long will we run sysbench.
 
 use best_performance or last_performance?
 
+### Action Definition
+
+Whether define action as the knobs' value, or define action as the increasing/decreasing length/bool of values.
+
 ### Minimal Score
 
 use -10 or -50?
