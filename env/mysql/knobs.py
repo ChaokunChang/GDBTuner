@@ -1,4 +1,4 @@
-import json
+import json,os
 from enum import Enum
 
 from ..template import Knob
@@ -7,14 +7,15 @@ from ..template import Knob
 class MySQLKnobs(object):
     def __init__(self, knobs_set, max_memory_size):
         # TODO: fetch default value from mysql
+        gdbt_home = os.getenv('GDBT_HOME')
         if knobs_set == 'mini_knobs':
             # Obtained from MySQL 8.0 documentation
-            knobs_path = 'data/mini_knobs.json'
+            knobs_path = os.path.join(gdbt_home,'data/mini_knobs.json')
             with open(knobs_path, 'r') as f:
                 self.knobs_attrs = json.load(f)
         elif knobs_set == 'all_knobs':
             # Fetch from Ottertune
-            knobs_path = 'data/mysql-80_knobs.json'
+            knobs_path = os.path.join(gdbt_home,'data/mysql-80_knobs.json')
             with open(knobs_path, 'r') as f:
                 all_knobs = json.load(f)
 
