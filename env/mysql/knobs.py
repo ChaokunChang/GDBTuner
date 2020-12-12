@@ -1,5 +1,5 @@
-import enum
 import json
+from enum import Enum
 
 from ..template import Knob
 
@@ -9,14 +9,14 @@ class MySQLKnobs(object):
         # TODO: fetch default value from mysql
         if knobs_set == 'mini_knobs':
             # Obtained from MySQL 8.0 documentation
-            knobs_path = f'data/mini_knobs.json'
+            knobs_path = 'data/mini_knobs.json'
             with open(knobs_path, 'r') as f:
-                self.knobs_attrs = json.load(knobs_path)
+                self.knobs_attrs = json.load(f)
         elif knobs_set == 'all_knobs':
             # Fetch from Ottertune
-            knobs_path == f'data/mysql-80_knobs.json'
+            knobs_path = 'data/mysql-80_knobs.json'
             with open(knobs_path, 'r') as f:
-                all_knobs = json.load(knobs_path)
+                all_knobs = json.load(f)
 
             class VarType(Enum):
                 STRING = 1
@@ -27,11 +27,11 @@ class MySQLKnobs(object):
                 TIMESTAMP = 6
 
             def tunable(knob):
+                # STRING and TIMESTAMP types are not supported
                 attrs = knob['fields']
-                if attrs['tunable'] and \
-                    (attrs['vartype'] == VarType.INTEGER or \
-                     attrs['vartype'] == VarType.REAL or \
-                     attrs['vartype'] == VarType.BOOL):
+                tunable_types = [
+                    VarType.INTEGER, VarType.REAL, VarType.BOOL, VarType.ENUM]
+                if attrs['tunable'] and VarType(attrs['vartype']) in tunable_types:
                     return True
 
                 return False
@@ -53,6 +53,7 @@ class MySQLKnobs(object):
                     "name": x['fields']['name'].replace('global.', ''),
                     "range": [x['fields']['minval'], x['fields']['maxval']],
                     "default": x['fields']['default'],
+                    "enum_values": x['fields']['enumvals'],
                     "type": type_map[VarType(x['fields']['vartype']).name],
                 },
                 self.knobs_attrs
@@ -66,10 +67,14 @@ class MySQLKnobs(object):
             self.knobs[name] = Knob(self.knobs_attrs[i])
 
         # bound by max_memory_size
-        for name, knob in self.knobs:
+        for name, knob in self.knobs.items():
+            # potential bug when max_memory_size is too small,
+            # as name ends with size or limit is not necessary bounded
+            # by max_memory_size
             if knob.knob_type in ['int', 'float'] and \
                 (name.endswith('size') or name.endswith('limit')):
                 knob.max_value = min(knob.max_value, max_memory_size)
+                knob.value = min(knob.value, knob.max_value)
 
     @property
     def num_knobs(self):
@@ -99,9 +104,11 @@ if __name__ == "__main__":
     import numpy as np
 
     max_memory_size = 4 * 1024 * 1024 * 1024
+
+    # mini knobs
     mysql_knobs = MySQLKnobs('mini_knobs', max_memory_size)
     print(mysql_knobs.num_knobs)
-    print(mysql_knobs)
+    print(mysql_knobs.names)
     pprint(mysql_knobs.knobs)
 
     # generate random action
@@ -113,3 +120,41 @@ if __name__ == "__main__":
         for name in mysql_knobs.names:
             knob = mysql_knobs.knobs[name]
             assert(knob.min_value <= knob.value and knob.value <= knob.max_value)
+
+    # all knobs
+    mysql_knobs = MySQLKnobs('all_knobs', max_memory_size)
+    print(mysql_knobs.num_knobs)
+    print(mysql_knobs.names)
+
+    # generate random action
+    for i in range(10):
+        action = np.random.random(mysql_knobs.num_knobs)
+        mysql_knobs.apply_action(action)
+
+    # bool knob
+    config = {
+        "name": "knob",
+        "default": 0,
+        "range": [None, None],
+        "type": "bool"
+    }
+    knob = Knob(config)
+    knob.apply_action(0)
+    assert(knob.value == 0)
+    knob.apply_action(0.5)
+    assert(knob.value == 0)
+    knob.apply_action(1)
+    assert(knob.value == 1)
+
+    # enum knob
+    config = {
+        "name": "knob",
+        "default": "OPT2",
+        "range": [None, None],
+        "enum_values": ["OPT1", "OPT2", "OPT3"],
+        "type": "enum"
+    }
+    knob = Knob(config)
+    knob.apply_action(0)
+    knob.apply_action(0.5)
+    knob.apply_action(1)

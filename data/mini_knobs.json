@@ -1,38 +1,38 @@
 [
     {
-        "name": 'table_open_cache',
+        "name": "table_open_cache",
         "range": [1, 524288],
         "default": 4000,
         "type": "int"
     },
     {
-        "name": 'innodb_buffer_pool_size',
-        "range": [5242880, None],
+        "name": "innodb_buffer_pool_size",
+        "range": [5242880, 18446744073709551615],
         "default": 134217728,
         "type": "int"
     },
     {
-        "name": 'innodb_buffer_pool_instances',
+        "name": "innodb_buffer_pool_instances",
         "range": [1, 64],
         "default": 1,
         "type": "int"
     },
     {
-        "name": 'innodb_purge_threads',
+        "name": "innodb_purge_threads",
         "range": [1, 32],
         "default": 4,
         "type": "int"
     },
     {
-        "name": 'innodb_read_io_threads',
+        "name": "innodb_read_io_threads",
         "range": [1, 64],
         "default": 4,
         "type": "int"
     },
     {
-        "name": 'innodb_write_io_threads',
+        "name": "innodb_write_io_threads",
         "range": [1, 64],
         "default": 4,
         "type": "int"
-    },
+    }
 ]
