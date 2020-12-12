@@ -62,13 +62,12 @@ class MySQLConnector(DBConnector):
                     passwd=self.password
                 )
             except pymysql.Error as e:
-                print(f"[FAIL]: Test connection to db failed in {i+1}.", e)
+                print(f"[FAIL]: Test connection to db failed in {i+1}th try.", e)
                 time.sleep(retry_interval)
             else:
-                print(f"[INFO]: Test connection succeed in {i+1} tines.")
+                print(f"[INFO]: Test connection succeed in {i+1} times try.")
                 db_connection.close()
                 return True
-        print("[INFO]: Test connection failed.")
         return False
 
 
@@ -103,7 +102,7 @@ class MySQLConnector(DBConnector):
         retry_count = 0
         while retry_count < 5:  # try 4 more times if failed in the first call.
             try:
-                print("[INFO]: call start_db through rpc ...")
+                print("[INFO]: restart db through rpc ...")
                 sp.start_db(self.instance_name, configs)
             except Fault as e:
                 time.sleep(5)
@@ -478,10 +477,12 @@ class MySQLEnv(DBEnv):
         self.episode_length += 1
 
         if self.db_handle.test_connection(retry_count=300, retry_interval=5):
-            # if we can connect to the db after applying new knobs,
+            # if we can connect to the db after applying new knobs, 
+            # it means that the db has already been restarted.
             return True
         else:
             # if we can not connect to the db anymore.
+            print(print("[FAIL]: The database is not running, check it."))
             self.knobs = MySQLKnobs(self.db_handle.knobs_set, self.db_handle.memory)
             self.db_handle.update_configuration(self.knobs)
             print("[FAIL]: Failed to apply the new knobs to db.")

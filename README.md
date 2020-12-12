@@ -4,9 +4,9 @@ GDBTuner is a general auto tuner for database knobs. GDBTuner mainly use RL algo
 
 ## Preparation
 
-### Install Mysql on server
+### Install MySQL8 on Server
 
-### Mysql operations
+### Mysql Operations
 
 create a new database:
 
@@ -34,7 +34,7 @@ FLUSH PRIVILEGES;
 
 ## Hyper Parameters
 
-### Sysbench related
+### Sysbench Related
 
 workload type: read/write/read_write.
 
@@ -44,7 +44,7 @@ report-interval=5 # report each 5 seconds.
 threads=16 # for projgw, 128 is the highest.
 time=20 # how long will we run sysbench.
 
-## Ablation study
+## Ablation Study
 
 ### Reward Calculation
 
@@ -53,3 +53,7 @@ use best_performance or last_performance?
 ### Minimal Score
 
 use -10 or -50?
+
+### Workload
+
+number of tables and size of tables, and workload type.
