@@ -103,7 +103,7 @@ class MySQLKnobs(object):
     def as_dict(self):
         ret = {}
         for name in self.knobs.keys():
-            ret[name] = self.knobs[name]
+            ret[name] = self.knobs[name].value
         return ret
 
 

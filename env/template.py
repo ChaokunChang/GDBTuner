@@ -27,12 +27,12 @@ class DBEnv(gym.Env):
         self.experiment_id = datetime.datetime.fromtimestamp(
             int(time.time())).strftime("%Y-%m-%d-%H%M%S")
         self.gdbt_home = os.getenv("GDBT_HOME")
-        self.experiment_path = os.path.join(
+        self.experiment_dir = os.path.join(
             self.gdbt_home, f"data/experiments/{self.experiment_id}")
-        if not os.path.exists(self.experiment_path):
-            os.mkdir(self.experiment_path)
+        if not os.path.exists(self.experiment_dir):
+            os.mkdir(self.experiment_dir)
         if self.simulator_handle is not None:
-            self.simulator_handle.output_path = os.path.join(self.experiment_path,"sysbench_result.log")
+            self.simulator_handle.output_path = os.path.join(self.experiment_dir,"sysbench_result.log")
         self.progress = []
 
     def reset(self):

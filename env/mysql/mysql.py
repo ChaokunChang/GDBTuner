@@ -239,7 +239,7 @@ class MySQLEnv(DBEnv):
         state = state_metrics
         self.knobs.save(
             metrics=performance_metrics, knob_file=os.path.join(
-                self.experiment_path, "knob_metrics.txt"))
+                self.experiment_dir, "knob_metrics.txt"))
 
         return state
 
@@ -278,7 +278,7 @@ class MySQLEnv(DBEnv):
         # save the knobs and metrics
         self.knobs.save(
             metrics=performance_metrics, knob_file=os.path.join(
-                self.experiment_path, "knob_metrics.txt"))
+                self.experiment_dir, "knob_metrics.txt"))
 
         # get rewards, nxt_state, done, and info for current step.
         reward = self._get_reward(performance_metrics)
@@ -312,11 +312,11 @@ class MySQLEnv(DBEnv):
 
         if self.done:
             progress_i_file_path = os.path.join(
-                self.experiment_path, f"progress_{len(self.progress)}.json")
+                self.experiment_dir, f"progress_{len(self.progress)}.json")
             with open(progress_i_file_path, 'w') as f:
                 f.write(json.dumps(self.progress[-1]))
             progress_file_path = os.path.join(
-                self.experiment_path, "progress.json")
+                self.experiment_dir, "progress.json")
             with open(progress_file_path, 'w') as f:
                 f.write(json.dumps(self.progress))
 
@@ -518,6 +518,6 @@ class MySQLEnv(DBEnv):
             log_str = ""
             for key in knobs.names:
                 log_str += f" --{key}={knobs[key]}"
-            with open(os.path.join(self.experiment_path, "failed.log"), 'a+') as f:
+            with open(os.path.join(self.experiment_dir, "failed.log"), 'a+') as f:
                 f.write(log_str+'\n')
                 return False
