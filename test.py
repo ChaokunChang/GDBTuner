@@ -92,7 +92,7 @@ if __name__ == "__main__":
     }
 
     while not done:
-        action = agent.compute_action(obs)
+        action = agent.compute_action(obs, explore=False)
         obs, reward, done, info = env.step(action)
 
         result["action"].append(action)
