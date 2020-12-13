@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from pprint import pprint
+from env.mysql import MySQLKnobs
 
 
 def parse_args():
@@ -69,7 +70,7 @@ def find_best_knob(args):
     for i in range(result["steps"]):
         tps, latency, qps = result["info"][i]["performance_metrics"]
         tps_delta = (tps - default_tps) / default_tps * 100
-        latency_delta = (latency - default_latency) / default_latency * 100
+        latency_delta = - (latency - default_latency) / default_latency * 100
         qps_delta = (qps - default_qps) / default_qps * 100
 
         delta = [tps_delta, latency_delta, qps_delta]
@@ -79,6 +80,7 @@ def find_best_knob(args):
             best_metrics = [tps, latency, qps]
 
     print(f"[INFO]: Best Index: {best_index} / {result['steps']}")
+    print("[INFO]: Default TPS: {}, Latency: {}, QPS: {}".format(*result["default_metrics"]))
     print("[INFO]: Best TPS: {}, Latency: {}, QPS: {}".format(*best_metrics))
     print("[INFO]: Best TPS%: {}, Latency%: {}, QPS%: {}".format(*best_delta))
 
