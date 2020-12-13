@@ -71,6 +71,7 @@ if __name__ == "__main__":
         # "evaluation_num_episodes": 0,
     }
 
+    env = MySQLEnv(config["env_config"])
     agent = ddpg.DDPGTrainer(config=config)
     agent.restore(args.checkpoint_path)
 
