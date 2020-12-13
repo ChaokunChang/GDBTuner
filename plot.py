@@ -92,7 +92,10 @@ def find_best_knob(args):
         # TODO: isolate mysql config
         max_memory_size = 4 * 1024 * 1024 * 1024
         mysql_knobs = MySQLKnobs('mini_knobs', max_memory_size)
+        print("[INFO]: Default:")
+        pprint(mysql_knobs.knobs)
         mysql_knobs.apply_action(action)
+        print("[INFO]: Best:")
         pprint(mysql_knobs.knobs)
 
 
