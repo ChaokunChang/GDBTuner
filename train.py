@@ -24,7 +24,7 @@ def parse_args():
 
     # Env related arguments
     parser.add_argument("--max-episode-length", type=int, default=50)
-    parser.add_argument("--minimal_score", type=float, default=-10.0)
+    parser.add_argument("--minimal-score", type=float, default=-10.0)
     parser.add_argument("--num_metrics", type=int, default=74)
 
     # Simulator related arguments
