@@ -81,6 +81,11 @@ class MySQLServer(DBServer):
             # use ConfigParser to handle cnf file
             config_parser = CP.ConfigParser()
             config_parser.read(cnf_file)
+            # remove legacy knobs but preserving system knobs
+            system_fields = ['datadir', 'socket', 'log-error', 'pid-file']
+            for k in config_parser['mysqld']:
+                if k not in system_fields:
+                    config_parser.remove_option('mysqld', k)
             for conf in configs:
                 key, value = conf.split(':')
                 config_parser.set('mysqld', key, value)
