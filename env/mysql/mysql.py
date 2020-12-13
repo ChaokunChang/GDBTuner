@@ -271,7 +271,7 @@ class MySQLEnv(DBEnv):
             self.done = True
             return failed_ret
 
-        step_log["next_state"] = state_metrics
+        step_log["next_state"] = state_metrics.tolist()
         step_log["tps"] = performance_metrics[0]
         step_log["lat"] = performance_metrics[1]
         step_log["qps"] = performance_metrics[2]
@@ -396,8 +396,8 @@ class MySQLEnv(DBEnv):
         Args:
             knobs: MySQLKnobs, the db settings.
         Returns:
-            state_metrics: the metrics that can be seen as state of env
-            performance_metrics: the metrics that can be used to calculate rewards.
+            state_metrics: np.ndarray(float), the metrics that can be seen as state of env
+            performance_metrics: list of float, the metrics that can be used to calculate rewards.
         """
         # get state metrics from db
         db_metrics = []
