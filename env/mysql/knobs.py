@@ -47,6 +47,12 @@ class MySQLKnobs(object):
                 'TIMESTAMP': 'timestamp',
             }
 
+            def enum_split(enum_values):
+                if enum_values is None:
+                    return None
+                else:
+                    return enum_values.split(',')
+
             # remove string and timestamp type knobs
             self.knobs_attrs = [x for x in all_knobs if tunable(x)]
             # convert to our format
@@ -55,7 +61,7 @@ class MySQLKnobs(object):
                     "name": x['fields']['name'].replace('global.', ''),
                     "range": [x['fields']['minval'], x['fields']['maxval']],
                     "default": x['fields']['default'],
-                    "enum_values": x['fields']['enumvals'],
+                    "enum_values": enum_split(x['fields']['enumvals']),
                     "type": type_map[VarType(x['fields']['vartype']).name],
                 },
                 self.knobs_attrs
