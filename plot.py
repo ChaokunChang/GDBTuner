@@ -45,13 +45,14 @@ def plot_reward(args):
     ax.plot(timesteps, reward_mean, '-', label='Reward Mean')
     ax.fill_between(timesteps, reward_min, reward_max, alpha=0.2, label='Reward Min/Max')
     ax.legend()
-    if args.show_figure:
-        plt.show()
 
     if not os.path.exists(args.save_path):
         os.mkdir(args.save_path)
 
-    plt.savefig(os.path.join(args.save_path, 'reward.svg'))
+    # must put before plt.show(), otherwise it's cleaned
+    plt.savefig(os.path.join(args.save_path, 'reward.pdf'))
+    if args.show_figure:
+        plt.show()
 
 
 def find_best_knob(args):
