@@ -193,6 +193,8 @@ class MySQLEnv(DBEnv):
         DBEnv.__init__(self, config)
         self.env_type = 'mysql-v0'
         self.score = 0.0
+        self.minimal_score = config.get('minimal_score', -10.0)
+
         self.knobs = MySQLKnobs(
             self.db_handle.knobs_set, self.db_handle.memory)
 
@@ -223,6 +225,7 @@ class MySQLEnv(DBEnv):
 
         # apply the default knobs to db
         retry_count = 0
+        applying_duration = time.time()
         while not self._apply_knobs(self.knobs) and retry_count < 5:
             retry_count += 1
             print(
@@ -230,6 +233,7 @@ class MySQLEnv(DBEnv):
         if retry_count == 5:
             print(
                 f"[FATL]: appling knobs failed after {retry_count} times trying.")
+        applying_duration = time.time() - applying_duration
 
         # get db states applying the knobs to db.
         state_metrics, performance_metrics = self._get_state(
@@ -237,9 +241,22 @@ class MySQLEnv(DBEnv):
         self.last_performance_metrics = performance_metrics
         self.default_performance_metrics = performance_metrics
         state = state_metrics
-        self.knobs.save(
-            metrics=performance_metrics, knob_file=os.path.join(
-                self.experiment_dir, "knob_metrics.txt"))
+        # self.knobs.save(
+        #     metrics=performance_metrics, knob_file=os.path.join(
+        #         self.experiment_dir, "knob_metrics.txt"))
+
+        step_log = {"step": -1}  # -1 means the reset
+        step_log["knobs"] = self.knobs.as_dict()
+        step_log["applying_duration"] = applying_duration
+        step_log["next_state"] = state_metrics.tolist()
+        step_log["tps"] = performance_metrics[0]
+        step_log["lat"] = performance_metrics[1]
+        step_log["qps"] = performance_metrics[2]
+        step_log["cur_tps_lat"] = float(step_log["tps"]) / step_log["lat"]
+        step_log["reward"] = 0
+        step_log["score"] = 0
+        step_log["best_tps_lat"] = step_log["cur_tps_lat"]
+        self.progress[-1].append(step_log)
 
         return state
 
@@ -275,10 +292,11 @@ class MySQLEnv(DBEnv):
         step_log["tps"] = performance_metrics[0]
         step_log["lat"] = performance_metrics[1]
         step_log["qps"] = performance_metrics[2]
+        step_log["cur_tps_lat"] = float(step_log["tps"]) / step_log["lat"]
         # save the knobs and metrics
-        self.knobs.save(
-            metrics=performance_metrics, knob_file=os.path.join(
-                self.experiment_dir, "knob_metrics.txt"))
+        # self.knobs.save(
+        #     metrics=performance_metrics, knob_file=os.path.join(
+        #         self.experiment_dir, "knob_metrics.txt"))
 
         # get rewards, nxt_state, done, and info for current step.
         reward = self._get_reward(performance_metrics)
@@ -295,13 +313,13 @@ class MySQLEnv(DBEnv):
             self.last_performance_metrics = self.best_performance_metrics
         else:
             print("[INFO]: Best performance remained.")
-        step_log["best_tps_lat"] = self.last_performance_metrics[0] / \
+        step_log["best_tps_lat"] = float(self.last_performance_metrics[0]) / \
             self.last_performance_metrics[1]
 
         self.progress[-1].append(step_log)
         # stop episode if accumulated reward is too low
         # if the accumulated reward is less than -10, we consider end.
-        if self.score < -10.0:
+        if self.score < self.minimal_score:
             print(
                 f"[INFO]: End of episode reached with {self.episode_length} steps, because score = {self.score} < -10.0 .")
             self.done = True
