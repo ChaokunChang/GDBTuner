@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument("--as-test", action="store_true")
     parser.add_argument("--steps-per-iter", type=int, default=40)
     parser.add_argument("--checkpoint-freq", type=int, default=1)
+    parser.add_argument("--restore", type=str, default=None)
     # parser.add_argument("--stop-iters", type=int, default=10)
     # parser.add_argument("--stop-reward", type=float, default=100)
 
@@ -85,8 +86,8 @@ if __name__ == "__main__":
         # "episode_reward_mean": args.stop_reward,
     }
     print("[INFO]: Start training.")
-    results = tune.run(ddpg.DDPGTrainer, config=config, stop=stop,
-                       checkpoint_freq=args.checkpoint_freq, verbose=1)
+    results = tune.run(ddpg.DDPGTrainer, config=config, restore=args.restore, stop=stop,
+                       checkpoint_freq=args.checkpoint_freq, checkpoint_at_end=True, verbose=1)
     print("[INFO]: Finished training.")
 
     if args.as_test:
