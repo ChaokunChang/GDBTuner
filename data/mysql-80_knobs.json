@@ -1164,7 +1164,7 @@
         "fields": {
             "category": "innodb_variables",
             "vartype": 5,
-            "default": "",
+            "default": "fsync",
             "minval": null,
             "maxval": null,
             "unit": 3,
